@@ -1,0 +1,32 @@
+Simulation 1:
+
+
+power test: 1/1 = slice
+
+            0/1 = simulation
+                      
+FDR:        0/0 = simulation
+
+slice.fa + regular.fa ---> simulation
+
+Calculate:
+
+    % Power
+
+    % FDR
+    
+    % GT concordance
+
+
+Simulation 2:  Down-coverage test
+
+Sardinia 80x (3), Gecco 30x
+
+To 5x or 2x
+
+GT concordance
+
+GL concordance
+
+
+Simulation 3: Duplicate Sample
