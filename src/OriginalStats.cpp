@@ -282,14 +282,14 @@ bool OriginalStats::setAnchorRank( bool & theRank, int & gq_peak, MergeCellPtr &
 	if ( new_gq > gq_peak )
 		gq_peak = new_gq;
 
-// compare dosgae
+/* compare dosgae
 	int anchor_dosage = GetAlleleDosage( Anchor->GL );
 	int new_dosage = GetAlleleDosage( NewPtr->GL );
 	if ( anchor_dosage > new_dosage )
 		theRank = 1;
 	else if (anchor_dosage < new_dosage)
 		theRank = 0;
-	return 1;
+	return 1;*/
 
 // posterior variant
 	int anchor_posterior = GetVariantPosterior( Anchor->GL );
