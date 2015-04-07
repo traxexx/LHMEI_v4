@@ -9,7 +9,7 @@ using std::vector;
 class SingleCellPrint
 {
   public:
-  	SingleCellPrint( int win_index, vector<int> & GL ); // constructor
+  	SingleCellPrint( int win_index, vector<float> & GL ); // constructor
   	~SingleCellPrint();
   	
 	int wcount; // # merge window
@@ -23,7 +23,7 @@ class SingleCellPrint
 // rule: dosage --> posterior-variant --> %(disc + clip + unmap) --> less %proper -->depth --> use anchor
 //bool CompareDosage( vector<int> & anchorGL, vector<int> & newGL );
 
-int GetVariantPosterior( vector<int> & GL);
+int GetVariantPosterior( vector<float> & GL);
 
 int GetSupportReadFraction( vector<int> & counts, int depth );
 

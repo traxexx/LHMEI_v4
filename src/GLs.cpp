@@ -86,7 +86,7 @@ float GetProbFromGLs( float BaseGL, float AddGL )
 }
 
 // pl of p(no variant) / p(all)
-int GetVariantQuality( vector<int> & GL )
+int GetVariantQuality( vector<float> & GL )
 {
 	int qual;
 	if (GL.size() != 3) {
@@ -95,8 +95,8 @@ int GetVariantQuality( vector<int> & GL )
 	}
 	
 // start
-	float lVariant = SumGL(float( GL[1] ), float( GL[2] ) );
-	float lAll = SumGL( float(GL[0]), lVariant );
+	float lVariant = SumGL( GL[1], GL[2] );
+	float lAll = SumGL( GL[0], lVariant );
 	float pVariant = GetProbFromGLs( lVariant, lAll );
 	if ( GL[0] >= GL[1] && GL[0] >= GL[2] ) { // no variant, return -10 * log10 ( variant )
 		qual = round( -10 * log10( pVariant ) );
@@ -111,7 +111,7 @@ int GetVariantQuality( vector<int> & GL )
 }
 
 
-int GetAlleleDosage( vector<int> & GL )
+int GetAlleleDosage( vector<float> & GL )
 {
 	int dosage;
 	if ( GL[0] >= GL[1] ) {
@@ -130,7 +130,7 @@ int GetAlleleDosage( vector<int> & GL )
 }
 
 
-string GetGenotype( vector<int> & GL )
+string GetGenotype( vector<float> & GL )
 {
 	if (GL.size() != 3) {
 		cerr << "ERROR: GL size != 3 at GetGenotype() " << endl;
@@ -152,7 +152,7 @@ string GetGenotype( vector<int> & GL )
 	return gt;
 }
 
-void SetPLsFromGL( vector<int> & PL, vector<int> & GL )
+void SetPLsFromGL( vector<int> & PL, vector<float> & GL )
 {
 	float base10 = log(10);
 	if ( !PL.empty() ) {
@@ -165,19 +165,19 @@ void SetPLsFromGL( vector<int> & PL, vector<int> & GL )
 		exit(1);
 	}
 	for( int i = 0; i <= 2; i++ ) // maybe PL is not that precise due to GL is stored as int
-		PL[i] = round( -float(GL[i]) * 10 / base10 );
+		PL[i] = round( -GL[i] * 10 / base10 );
 }
 
 
 // gt quality = wrong varint gt / all variant gt
-int GetGenotypeQuality( vector<int> & GL )
+int GetGenotypeQuality( vector<float> & GL )
 {
 	int gq;
-	float sum =  SumGL( float(GL[1]), float(GL[2]) );
-	if ( round(sum) == GL[1] || round(sum) == GL[2] ) // variant GL is dominating
+	float sum =  SumGL( GL[1], GL[2] );
+	if ( sum == GL[1] || sum == GL[2] ) // variant GL is dominating
 		gq = 60;
 	else { // not dominating
-		float p1 = GetProbFromGLs( float(GL[1]), sum );
+		float p1 = GetProbFromGLs( GL[1], sum );
 		if ( GL[1] >= GL[2] ) {// 1 is right gt
 			if ( p1 >= 0.999999 )
 				gq = 60;

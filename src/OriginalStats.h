@@ -25,7 +25,7 @@ typedef struct {
 typedef struct {
 	int dups;
 	vector<int> counts;
-	vector<int> GL;
+	vector<float> GL;
 } MergeCell;
 
 typedef vector<MergeCell>::iterator MergeCellPtr;

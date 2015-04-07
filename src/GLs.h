@@ -23,15 +23,15 @@ int GetNumberOfZerosInVec( vector<int> & counts );
 
 float GetProbFromGLs( float BaseGL, float AddGL );
 
-int GetVariantQuality( vector<int> & GL );
+int GetVariantQuality( vector<float> & GL );
 
-int GetAlleleDosage( vector<int> & GL );
+int GetAlleleDosage( vector<float> & GL );
 
-string GetGenotype( vector<int> & GL );
+string GetGenotype( vector<float> & GL );
 
-void SetPLsFromGL( vector<int> & PL, vector<int> & GL );
+void SetPLsFromGL( vector<int> & PL, vector<float> & GL );
 
-int GetGenotypeQuality( vector<int> & GL );
+int GetGenotypeQuality( vector<float> & GL );
 
 
 #endif

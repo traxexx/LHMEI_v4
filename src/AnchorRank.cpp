@@ -2,7 +2,7 @@
 #include "GLs.h"
 #include "Globals.h"
 
-SingleCellPrint::SingleCellPrint( int win_index, vector<int> & GL ):
+SingleCellPrint::SingleCellPrint( int win_index, vector<float> & GL ):
 	wcount(1),
 	central( win_index * STEP + WIN / 2 ),
 	anchor_end( win_index)
@@ -26,10 +26,10 @@ SingleCellPrint::~SingleCellPrint(){}
 	
 	
 // similar to GetVariantQuality but skipped the sanity check, and assume GL[1] or GL[2] > GL[0]	
-int GetVariantPosterior( vector<int> & GL)
+int GetVariantPosterior( vector<float> & GL)
 {
-	float lVariant = SumGL(float( GL[1] ), float( GL[2] ) );
-	float lAll = SumGL( float(GL[0]), lVariant );
+	float lVariant = SumGL( GL[1], GL[2] );
+	float lAll = SumGL( GL[0], lVariant );
 	float pVariant = GetProbFromGLs( lVariant, lAll );
 	int post = (pVariant * 10);
 	return post;
