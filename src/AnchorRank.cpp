@@ -2,7 +2,7 @@
 #include "GLs.h"
 #include "Globals.h"
 
-SingleCellPrint::SingleCellPrint( int win_index ):
+SingleCellPrint::SingleCellPrint( int win_index, vector<int> & GL ):
 	wcount(1),
 	central( win_index * STEP + WIN / 2 ),
 	anchor_end( win_index)
@@ -10,6 +10,7 @@ SingleCellPrint::SingleCellPrint( int win_index ):
 	int half_step = STEP / 2;
 	var_end = win_index + half_step;
 	ci = half_step;
+	gq_peak = GetVariantQuality( GL );
 }
 
 SingleCellPrint::~SingleCellPrint(){}

@@ -9,7 +9,7 @@ using std::vector;
 class SingleCellPrint
 {
   public:
-  	SingleCellPrint( int win_index ); // constructor
+  	SingleCellPrint( int win_index, vector<int> & GL ); // constructor
   	~SingleCellPrint();
   	
 	int wcount; // # merge window
@@ -17,9 +17,8 @@ class SingleCellPrint
 	int anchor_end; // use in add
 	int ci; // confidence interval
 	int var_end;
+	int gq_peak; // highest g qual
 };
-
-void InitializeSingleCellPrint( int win_index );
 
 // rule: dosage --> posterior-variant --> %(disc + clip + unmap) --> less %proper -->depth --> use anchor
 //bool CompareDosage( vector<int> & anchorGL, vector<int> & newGL );

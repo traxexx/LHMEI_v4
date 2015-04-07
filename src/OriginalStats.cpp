@@ -234,20 +234,20 @@ void OriginalStats::PrintGLasVcf( string & vcf_name )
 			
 			if ( infoPtr == NULL ) { // new anchor
 				anchor = cell_it;
-				infoPtr = new SingleCellPrint( anchor->win_index );
+				infoPtr = new SingleCellPrint( anchor->win_index, anchor->ptr->GL );
 			}
 			else { // compare with previous anchor
 				if ( cell_it->win_index - infoPtr->anchor_end > Times ) { // not consecutive. start new anchor. print old anchor
 					printSingleMergeCell( outVcf, anchor, chr_name, infoPtr );
 					delete infoPtr;
 					anchor = cell_it;
-					infoPtr = new SingleCellPrint( anchor->win_index );
+					infoPtr = new SingleCellPrint( anchor->win_index, anchor->ptr->GL );
 				}
 				else { // consecutive. compare with anchor
 					infoPtr->anchor_end = cell_it->win_index;
 					infoPtr->wcount++;
 					bool use_anchor;
-					bool rank_success = setAnchorRank( use_anchor, anchor->ptr, cell_it->ptr );
+					bool rank_success = setAnchorRank( use_anchor, infoPtr->gq_peak, anchor->ptr, cell_it->ptr );
 					if ( rank_success ) { // comparable
 						if ( !use_anchor ) { // adjust info ptr with new anchor
 							anchor = cell_it;
@@ -275,8 +275,13 @@ void OriginalStats::PrintGLasVcf( string & vcf_name )
 // if set successfully, return 1;
 // compare. If Anchor is bigger (use anchor), theRank = 1;
 // rule: dosage --> posterior-variant --> %(disc + clip + unmap) --> less %proper --> depth --> can't set
-bool OriginalStats::setAnchorRank( bool & theRank, MergeCellPtr & Anchor, MergeCellPtr & NewPtr )
+bool OriginalStats::setAnchorRank( bool & theRank, int & gq_peak, MergeCellPtr & Anchor, MergeCellPtr & NewPtr )
 {
+// update gq_peak first
+	int new_gq = GetVariantQuality( NewPtr->GL );
+	if ( new_gq > gq_peak )
+		gq_peak = new_gq;
+
 // compare dosgae
 	int anchor_dosage = GetAlleleDosage( Anchor->GL );
 	int new_dosage = GetAlleleDosage( NewPtr->GL );
@@ -334,8 +339,7 @@ void OriginalStats::printSingleMergeCell( ofstream & outVcf, GlcPtr & Ptr, strin
 {	
 	MergeCellPtr Merge = Ptr->ptr;
 	outVcf << chr_name << "\t" << infoPtr->central << "\t.\t.\t<INS:ME:" << mei_name << ">\t";
-	int qual = GetVariantQuality( Merge->GL );
-	outVcf << qual << "\tPASS\tSVTYPE=INS;END=";
+	outVcf << infoPtr->gq_peak << "\tPASS\tSVTYPE=INS;END=";
 	outVcf << infoPtr->var_end << ";CIPOS=";
 	outVcf << -infoPtr->ci << "," << infoPtr->ci;
 //	outVcf << ";CIEND=" << -infoPtr->ci << "," << infoPtr->ci;

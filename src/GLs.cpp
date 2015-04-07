@@ -36,11 +36,11 @@ float SumGL( float original, float single )
 // minus a log-p from conjugate. If compensate > original, return 1;
 float MinusGL( float original, float compensate)
 {	
-	if ( original - compensate <= -5 ) { // need to re-calculate outside
+	if ( original - compensate <= -14 ) { // need to re-calculate outside
 		cerr << "ERROR: compensate - original > 5. Cannot calculate minusGL!" << endl;
 		exit(1);
 	}
-	if ( original - compensate >= 5) { // no compensate
+	if ( original - compensate >= 14) { // no compensate
 		return original;
 	}
 	float mid = ( original + compensate ) / 2;
@@ -174,7 +174,7 @@ int GetGenotypeQuality( vector<int> & GL )
 {
 	int gq;
 	float sum =  SumGL( float(GL[1]), float(GL[2]) );
-	if ( int(sum) == GL[1] || int(sum) == GL[2] ) // variant GL is dominating
+	if ( round(sum) == GL[1] || round(sum) == GL[2] ) // variant GL is dominating
 		gq = 60;
 	else { // not dominating
 		float p1 = GetProbFromGLs( float(GL[1]), sum );

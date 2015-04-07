@@ -54,7 +54,7 @@ class OriginalStats
 	
   private:
   	void printSingleMergeCell( ofstream & outVcf, GlcPtr & Ptr, string & chr_name, SingleCellPrint * infoPtr );
-  	bool setAnchorRank( bool & theRank, MergeCellPtr & Anchor, MergeCellPtr & NewPtr );
+  	bool setAnchorRank( bool & theRank, int & gq_peak, MergeCellPtr & Anchor, MergeCellPtr & NewPtr );
   	
   	void appendRawStats( string & rec_name, int base );
   	void buildChrIndexVec();
