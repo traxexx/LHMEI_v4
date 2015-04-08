@@ -1,6 +1,7 @@
 #include "AnchorRank.h"
 #include "GLs.h"
 #include "Globals.h"
+#include <math.h>
 
 SingleCellPrint::SingleCellPrint( int win_index, vector<float> & GL, vector<int> & counts ):
 	wcount(1),
@@ -8,7 +9,7 @@ SingleCellPrint::SingleCellPrint( int win_index, vector<float> & GL, vector<int>
 	anchor_end( win_index)
 {
 	int half_step = STEP / 2;
-	var_end = win_index*STEP + half_step;
+	var_end = central + half_step;
 	ci = half_step;
 	gq_peak = GetVariantQuality( GL );
 	both_end = 0;
@@ -20,7 +21,7 @@ SingleCellPrint::~SingleCellPrint(){}
 void SingleCellPrint::UpdateCoordWithNew( int win_index )
 {
 	central = win_index * STEP + WIN / 2;
-	var_end = win_index + STEP / 2;
+	var_end = central + STEP / 2;
 }
 
 void SingleCellPrint::UpdateBothEnd( vector<int> & counts )
@@ -34,9 +35,11 @@ void SingleCellPrint::UpdateBothEnd( vector<int> & counts )
 
 void SingleCellPrint::UpdateWithEqual( int win_index, vector<int> & counts )
 {
-	central = (central + win_index * STEP + WIN/2 ) / 2;
-	var_end = (var_end + win_index * STEP + STEP/2 ) / 2;
-	ci = ((var_end - central)/STEP + 1) * STEP/2;
+	int new_position = win_index * STEP + WIN / 2;
+	ci +=  ceil( 2 * float(new_position - central) / STEP );
+// update
+	central = (central + new_position ) / 2;
+	var_end = central + STEP / 2;
 	UpdateBothEnd( counts );
 }
 
