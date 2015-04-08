@@ -234,14 +234,14 @@ void OriginalStats::PrintGLasVcf( string & vcf_name )
 			
 			if ( infoPtr == NULL ) { // new anchor
 				anchor = cell_it;
-				infoPtr = new SingleCellPrint( anchor->win_index, anchor->ptr->GL );
+				infoPtr = new SingleCellPrint( anchor->win_index, anchor->ptr->GL, anchor->ptr->counts );
 			}
 			else { // compare with previous anchor
 				if ( cell_it->win_index - infoPtr->anchor_end > Times ) { // not consecutive. start new anchor. print old anchor
 					printSingleMergeCell( outVcf, anchor, chr_name, infoPtr );
 					delete infoPtr;
 					anchor = cell_it;
-					infoPtr = new SingleCellPrint( anchor->win_index, anchor->ptr->GL );
+					infoPtr = new SingleCellPrint( anchor->win_index, anchor->ptr->GL, anchor->ptr->counts );
 				}
 				else { // consecutive. compare with anchor
 					infoPtr->anchor_end = cell_it->win_index;
@@ -251,14 +251,12 @@ void OriginalStats::PrintGLasVcf( string & vcf_name )
 					if ( rank_success ) { // comparable
 						if ( !use_anchor ) { // adjust info ptr with new anchor
 							anchor = cell_it;
-							infoPtr->central = anchor->win_index * STEP + WIN / 2;
-							infoPtr->var_end = anchor->win_index + STEP / 2;
+							infoPtr->UpdateCoordWithNew( anchor->win_index );
 						}
+						infoPtr->UpdateBothEnd( cell_it->ptr->counts );
 					}
 					else { // equal window, widen CI, do not change anchor
-						infoPtr->central = ( infoPtr->central + cell_it->win_index * STEP + WIN / 2 ) / 2;
-						infoPtr->var_end = (infoPtr->var_end + cell_it->win_index + STEP / 2 ) / 2;
-						infoPtr->ci = (cell_it->win_index - anchor->win_index) * (STEP / 2);
+						infoPtr->UpdateWithEqual( cell_it->win_index, cell_it->ptr->counts );
 					}
 				}
 			}
@@ -278,20 +276,40 @@ void OriginalStats::PrintGLasVcf( string & vcf_name )
 bool OriginalStats::setAnchorRank( bool & theRank, int & gq_peak, MergeCellPtr & Anchor, MergeCellPtr & NewPtr )
 {
 // update gq_peak first
+	int anchor_gq_sig_higher = 0; // for comparing posterior next
 	int new_gq = GetVariantQuality( NewPtr->GL );
-	if ( new_gq > gq_peak )
+	if ( new_gq > gq_peak ) {
+		if ( new_gq - gq_peak >= 10 )
+			anchor_gq_sig_higher = -1;
 		gq_peak = new_gq;
+	}
+	else if ( new_gq < gq_peak ) {
+		if ( gq_peak - new_gq >= 10 )
+			anchor_gq_sig_higher = 1;
+	}
 
 /* compare dosgae
 	int anchor_dosage = GetAlleleDosage( Anchor->GL );
 	int new_dosage = GetAlleleDosage( NewPtr->GL );
-	if ( anchor_dosage > new_dosage )
+	if ( anchor_dosage > new_dosage ) {
 		theRank = 1;
-	else if (anchor_dosage < new_dosage)
+		return 1;
+	}
+	else if (anchor_dosage < new_dosage) {
 		theRank = 0;
-	return 1;*/
-
+		return 1;
+	}
+*/
 // posterior variant
+	if ( anchor_gq_sig_higher > 0 ) {
+		theRank = 1;
+		return 1;
+	}
+	else if ( anchor_gq_sig_higher < 0 ) {
+		theRank = 0;
+		return 1;
+	}
+/*
 	int anchor_posterior = GetVariantPosterior( Anchor->GL );
 	int new_posterior = GetVariantPosterior( NewPtr->GL );
 	if ( anchor_posterior > new_posterior )
@@ -299,6 +317,7 @@ bool OriginalStats::setAnchorRank( bool & theRank, int & gq_peak, MergeCellPtr &
 	else if ( anchor_posterior < new_posterior )
 		theRank = 0;
 	return 1;
+*/
 
 // calculate depth here but do not use as comparison
 	int anchor_dp = GetVecSum( Anchor->counts );
@@ -307,27 +326,36 @@ bool OriginalStats::setAnchorRank( bool & theRank, int & gq_peak, MergeCellPtr &
 // %support
 	int anchor_support_frac = GetSupportReadFraction( Anchor->counts, anchor_dp );
 	int new_support_frac = GetSupportReadFraction( NewPtr->counts, new_dp );
-	if ( anchor_support_frac > new_support_frac )
+	if ( anchor_support_frac > new_support_frac ) {
 		theRank = 1;
-	else if ( anchor_support_frac < new_support_frac )
+		return 1;
+	}
+	else if ( anchor_support_frac < new_support_frac ) {
 		theRank = 0;
-	return 1;
+		return 1;
+	}
 
 // %proper
 	int anchor_proper = GetProperReadFraction( Anchor->counts, anchor_dp );
 	int new_proper = GetProperReadFraction( NewPtr->counts, new_dp );
-	if ( anchor_proper > new_proper )
+	if ( anchor_proper < new_proper ) {
 		theRank = 1;
-	else if ( anchor_proper < new_proper )
+		return 1;
+	}
+	else if ( anchor_proper > new_proper ) {
 		theRank = 0;
-	return 1;		
+		return 1;
+	}	
 
 // depth
-	if ( anchor_dp > new_dp )
+	if ( anchor_dp > new_dp ) {
 		theRank = 1;
-	else if ( new_dp > anchor_dp )
+		return 1;
+	}
+	else if ( new_dp > anchor_dp ) {
 		theRank = 0;
-	return 1;		
+		return 1;		
+	}
 
 	return 0;
 }
@@ -346,7 +374,7 @@ void OriginalStats::printSingleMergeCell( ofstream & outVcf, GlcPtr & Ptr, strin
 	int clip_count = getSumSupportClips( Merge->counts );
 	int disc_count = getSumSupportDiscs( Merge->counts);
 	int unmap_count = getSumSupportUnmaps( Merge->counts );
-	outVcf << ";CLIP=" << clip_count << ";DISC=" << disc_count << ";UNMAP=" << unmap_count << ";WCOUNT=" << infoPtr->wcount;
+	outVcf << ";BOTH_END=" << infoPtr->both_end << ";CLIP=" << clip_count << ";DISC=" << disc_count << ";UNMAP=" << unmap_count << ";WCOUNT=" << infoPtr->wcount;
 	outVcf << "\tGT:DP:GQ:PL\t";
 	string genotype = GetGenotype( Merge->GL );
 	vector<int> PL;

@@ -9,8 +9,11 @@ using std::vector;
 class SingleCellPrint
 {
   public:
-  	SingleCellPrint( int win_index, vector<float> & GL ); // constructor
+  	SingleCellPrint( int win_index, vector<float> & GL, vector<int> & counts ); // constructor
   	~SingleCellPrint();
+  	void UpdateCoordWithNew( int win_index );
+  	void UpdateBothEnd( vector<int> & counts );
+  	void UpdateWithEqual( int win_index, vector<int> & counts );
   	
 	int wcount; // # merge window
 	int central; // var position to report
@@ -18,6 +21,7 @@ class SingleCellPrint
 	int ci; // confidence interval
 	int var_end;
 	int gq_peak; // highest g qual
+	bool both_end; // if both end anchor present?
 };
 
 // rule: dosage --> posterior-variant --> %(disc + clip + unmap) --> less %proper -->depth --> use anchor

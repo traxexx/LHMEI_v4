@@ -110,6 +110,7 @@ void RefStats::AdjustUsedLoci(  OriginalStats * dataOsPtr )
 		if ( hom_map != selfHom.end() ) { // in hom
 			special_ptr->GL = data_ptr->GL;
 			special_ptr->dups = 1;
+			special_ptr->counts = data_ptr->counts;
 		// adjust hom
 			StatCellPtr hom_ptr = refStats[2].begin();
 			if ( hom_map->second.hom_index >= refStats[2].size() ) {
@@ -120,6 +121,7 @@ void RefStats::AdjustUsedLoci(  OriginalStats * dataOsPtr )
 			adjustSingleGL( data_ptr->counts, hom_ptr, special_ptr, 2);
 		// adjust het
 			adjustMultipleGL( data_ptr->counts, hom_map->second.hets, special_ptr);
+			genome->ptr = special_ptr;
 		// move special ptr
 			special_ptr++;
 		}
@@ -131,6 +133,7 @@ void RefStats::AdjustUsedLoci(  OriginalStats * dataOsPtr )
 				if ( neg_map != selfNeg.end() ) { //  in neg
 					special_ptr->GL = data_ptr->GL;
 					special_ptr->dups = 1;
+					special_ptr->counts = data_ptr->counts;
 					StatCellPtr neg_ptr = refStats[0].begin();
 					if ( neg_map->second.stat_index >= refStats[0].size() ) {
 						cerr << "ERROR: selfNeg index: " << neg_map->second.stat_index << " > refStats[0] size: " << refStats[0].size() << endl;
@@ -138,11 +141,13 @@ void RefStats::AdjustUsedLoci(  OriginalStats * dataOsPtr )
 					}
 					neg_ptr += neg_map->second.stat_index;
 					adjustSingleGL( data_ptr->counts, neg_ptr, special_ptr, 0 );
+					genome->ptr = special_ptr;
 					special_ptr++;
 				}
 				else if ( het_map != selfHet.end() ) { // in het
 					special_ptr->GL = data_ptr->GL;
 					special_ptr->dups = 1;
+					special_ptr->counts = data_ptr->counts;
 					StatCellPtr het_ptr = refStats[1].begin();
 					if ( het_map->second.stat_index >= refStats[1].size() ) {
 						cerr << "ERROR: selfHet index: " << het_map->second.stat_index << " > refStats[1] size: " << refStats[1].size() << endl;
@@ -150,6 +155,7 @@ void RefStats::AdjustUsedLoci(  OriginalStats * dataOsPtr )
 					}
 					het_ptr += het_map->second.stat_index;
 					adjustSingleGL( data_ptr->counts, het_ptr, special_ptr, 1 );
+					genome->ptr = special_ptr;
 					special_ptr++;
 				}
 			}
@@ -243,7 +249,7 @@ void RefStats::adjustSingleGL( vector<int> & counts, StatCellPtr & stat_ptr, Mer
 	else { // minus GL
 		float new_gl = MinusGL( original, compensate );
 		new_gl -= log(RefCounts[ s_ref ] - 1);
-		special_ptr->GL[ s_ref ] = round( new_gl );	
+		special_ptr->GL[ s_ref ] = new_gl;	
 	}
 }
 
@@ -271,7 +277,7 @@ void RefStats::setSingleRefGLWithExclusion( vector<int> & counts, StatCellPtr & 
 			conjugate_gl = SumGL( conjugate_gl, single_gl );
 	}
 	conjugate_gl -= log( RefCounts[ s_ref ] - 1 ); // minus the exclude
-	special_ptr->GL[ s_ref ] = round( conjugate_gl );	
+	special_ptr->GL[ s_ref ] = conjugate_gl;	
 }
 
 // adjust hom_rec with multiple het
@@ -292,7 +298,7 @@ void RefStats::adjustMultipleGL( vector<int> & counts, vector<unsigned int> & he
 	if ( original - compensate > -5 ) { // only do minus
 		float new_gl = MinusGL( original, compensate );	
 		new_gl -= log( RefCounts[1] - 10 );
-		special_ptr->GL[1] = round( new_gl );
+		special_ptr->GL[1] = new_gl;
 		return;
 	}
 
@@ -315,7 +321,7 @@ void RefStats::adjustMultipleGL( vector<int> & counts, vector<unsigned int> & he
 			conjugate_gl = SumGL( conjugate_gl, single_gl );		
 	}
 	conjugate_gl -= log(RefCounts[1] - 10); // counts
-	special_ptr->GL[1] = round( conjugate_gl );
+	special_ptr->GL[1] = conjugate_gl;
 }
 
 /************** end *****************/
@@ -338,7 +344,7 @@ void RefStats::setSingleRefGL( MergeCellPtr & merge, int & s_ref )
 			conjugate_gl = SumGL( conjugate_gl, single_gl );
 	}
 	conjugate_gl -= log(RefCounts[ s_ref ]);
-	merge->GL[ s_ref ] = round(conjugate_gl);
+	merge->GL[ s_ref ] = conjugate_gl;
 }
 
 /**** functions used in build ref stats *****/
