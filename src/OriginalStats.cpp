@@ -201,8 +201,8 @@ void OriginalStats::ClearUnderLevelMergeCells()
 {
 	int erase_cell = 0;
 	for( MergeCellPtr mptr = MergeData.begin(); mptr != MergeData.end(); mptr++ ) {
-		int disc = getSumSupportDiscs( mptr->counts );
-		if ( disc < LEVEL ) {
+		int n_support = getSumSupportDiscs( mptr->counts ) + getSumSupportUnmaps(mptr->counts) + getSumSupportClips(mptr->counts);
+		if ( n_support < LEVEL ) {
 			mptr->counts.clear();
 			erase_cell++;
 		}
