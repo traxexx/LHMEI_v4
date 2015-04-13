@@ -14,7 +14,7 @@ void PreProcessBam( const char* inBam, const char* outSam, const char* ctrlChr,
 	 const char * disc_name, const char * mei_coord_list, int avr_read_len, int avr_ins_size);
 
 // generate level list from disc.sam
-void GenerateLevelListFromDiscBam( const char * disc_name, const char * list_prefix, int step, int win );
+void GenerateLevelListFromDiscBam( const char * disc_name, const char * list_prefix, int step, int win, int avr_read_len );
 
 	 
 /************ inner functions **************/

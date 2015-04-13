@@ -171,17 +171,15 @@ void PreProcessBam( const char* inBam, const char* outSam, const char* ctrlChr,
 
 
 /* generate level list from disc.sam
-   levels:
-  			0 windows with unmap/disc
-  			1 windows with 1 MEI disc
-  			2,3,4,5 etc
-   ADD BY MATE (EM is for the current read): so not that accurate but who cares
+   levels list format: 2 col
+   	# evidence disc		# non-evidence ( disc + unmap )
+  			0,1,2,3,4,5 etc
+   ADD BY MATE (EM is for the current read)
    */
-void GenerateLevelListFromDiscBam( const char * disc_name, const char * list_prefix, int step, int win )
+void GenerateLevelListFromDiscBam( const char * disc_name, const char * list_prefix, int step, int win, int avr_read_len )
 {
 	if (DEBUG_MODE)
 		std::cout << "Generating level list from disc bam..." << std::endl;
-	int AvrReadLen = 100; // let's temporarily set this
 
 	SamFile samIn;
 	samIn.OpenForRead(disc_name);
@@ -199,13 +197,14 @@ void GenerateLevelListFromDiscBam( const char * disc_name, const char * list_pre
 // generate list for all then print out by chr
 
   // generate chr map
-  	map<string, vector<int> > levelMap;
+  	map<string, vector< std::pair<int, int> > > levelMap;
   	for(int i=0; i< samHeader.getNumSQs(); i++) {
   		String chr_Str = samHeader.getReferenceLabel(i);
   		string chr_str = string(chr_Str.c_str());
   		int chr_size = std::stoi( samHeader.getSQTagValue("LN", chr_str.c_str()) );
 		int win_count = chr_size / step + 1;
-		levelMap[chr_str].resize(win_count, -1);
+		std::pair<int, int> null_pair (-1, -1);
+		levelMap[chr_str].resize(win_count, null_pair);
   	}
 	
   // add level from bam
@@ -213,16 +212,16 @@ void GenerateLevelListFromDiscBam( const char * disc_name, const char * list_pre
 	int line_count = 0;
 	while(samIn.ReadRecord(samHeader, sam_rec)) {
 		line_count++;
-		if (sam_rec.getFlag() & 0x8) // skip unmap
+		if (sam_rec.getFlag() & 0x4) // skip unmap reads
 			continue;
 		string current_chr = sam_rec.getMateReferenceName();
-		int current_index_min = (sam_rec.get1BasedMatePosition() + AvrReadLen - win) / step + 1;
+		int current_index_min = (sam_rec.get1BasedMatePosition() + avr_read_len - win) / step + 1;
 		if (current_index_min < 0)
 			current_index_min = 0;
 		int current_index_max = sam_rec.get1BasedMatePosition() / step;
 		if ( current_index_max < 0 ) {
 			std::cerr << "Warning: negateive mapped position at: " << sam_rec.getReadName() << ". Skipped!" << std::endl;
-			continue;	
+			continue;
 		}
 		if ( current_index_max >= int(levelMap[current_chr].size()) ) {
 			std::cerr << "Warning: Mate of : " << sam_rec.getReadName() << " at: " << current_chr << "-" << sam_rec.get1BasedMatePosition() << " out of chr boundary. Skipped!" << std::endl;
@@ -234,33 +233,28 @@ void GenerateLevelListFromDiscBam( const char * disc_name, const char * list_pre
 			em_type = *tag > 0 ? 1 : 0;
 		else // no EM (that's not error, including some disc & unmap)
 			em_type = 0;
-		vector<int>::iterator lmap = levelMap[current_chr].begin();
-		lmap += current_index_min;
-		if (em_type) { // add to map
-			for(int i = current_index_min; i <= current_index_max; i++, lmap++) {
-				(*lmap)++;
-			}
+		vector< std::pair<int, int> >::iterator lmap = levelMap[current_chr].begin() + current_index_min;
+		if (em_type > 0) { // add to evidence
+			for(int i = current_index_min; i <= current_index_max; i++, lmap++)
+				(lmap->first)++;
 		}
-		else { // can only convert -1 to 0
-			for(int i = current_index_min; i <= current_index_max; i++, lmap++) {
-//std::cout << line_count<< ": " << current_chr << " : " << i << ", size = " << levelMap[current_chr].size() << std::endl;
-				if ( (*lmap) < 0 )
-					(*lmap) = 0;
-			}
+		else { // add to non-evidence
+			for(int i = current_index_min; i <= current_index_max; i++, lmap++)
+				(lmap->second)++;
 		}
 	}
 
 
   // print level info
-	for( map<string, vector<int> >::iterator mit = levelMap.begin(); mit != levelMap.end(); mit++ ) {
+	for( map<string, vector< std::pair<int, int> > >::iterator mit = levelMap.begin(); mit != levelMap.end(); mit++ ) {
 		ofstream list_file;
 		string list_name = string(list_prefix) + "." + mit->first;
 		list_file.open(list_name.c_str());
 		CheckOutFileStatus(list_file, list_name.c_str());
-		vector<int>::iterator it = mit->second.begin();
+		vector< std::pair<int, int> >::iterator it = mit->second.begin();
 		for( unsigned int dist=0; dist < mit->second.size(); dist++, it++ ) {
-			if (*it > -1) {
-				list_file << dist*step << "\t" << *it << std::endl;
+			if (it->first > -1 || it->second > -1) {
+				list_file << dist*step << "\t" << it->first << "\t" << it->second << std::endl;
 			}
 		}
 		list_file.close();
