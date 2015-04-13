@@ -60,7 +60,7 @@ void ComputeLHMEI (Options * ptrMainOptions)
 	string level_file_prefix = pre_dir + "level-list";
 	if (LEVEL >= 0) {
 		if ( !ExistDoneFile( pre_dir, "LevelList" ) ) {
-			GenerateLevelListFromDiscBam( discNsortBam.c_str(), level_file_prefix.c_str(), step_len, win_len );
+			GenerateLevelListFromDiscBam( discNsortBam.c_str(), level_file_prefix.c_str(), step_len, win_len, avr_read_len );
 			GenerateDoneFile( pre_dir, "LevelList" );	
 		}
 	}
