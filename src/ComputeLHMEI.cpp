@@ -5,7 +5,7 @@
 
 #include "ComputeLHMEI.h"
 #include "Utilities.h" // file check , done file generate etc
-#include "Preprocess.h" // generate ref-bam & disc_bam
+#include "Preprocess.h" // generate ref-b am & disc_bam
 #include "ReadMap.h"
 #include "bamUtility.h" // getAvrReadLen;
 #include "Globals.h" // DEBUG_MODE, WIN, STEP
@@ -24,8 +24,14 @@ void ComputeLHMEI (Options * ptrMainOptions)
 	WIN = stoi(ptrMainOptions->ArgMap["Win"]);
 	STEP = stoi(ptrMainOptions->ArgMap["Step"]);
 	string REF_CHR = ptrMainOptions->ArgMap["CtrlChr"];
+
+// set debug mode
 	if (ptrMainOptions->OptMap["debug"])
 		DEBUG_MODE = 1;
+
+// set single end
+	if ( ptrMainOptions->OptMap["includeSingleAnchor"] )
+		SINGLE_SIDE = 1;
 
 	string work_dir = ptrMainOptions->ArgMap["WorkDir"];
 	if (work_dir[ work_dir.size() - 1 ] != '/')
@@ -220,7 +226,10 @@ void ComputeLHMEI (Options * ptrMainOptions)
 			dataOsPtr->PrintGLasVcf( vcf_name );
 		}
 	}
-// delete intermediates
+/* delete intermediates:
+	ctrl dir: *.fastq, *-nsort.bam, *-remap-sort.bam, align-pe.sam*
+	preprocess: *.sam
+*/
 }
 
 

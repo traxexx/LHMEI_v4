@@ -238,7 +238,8 @@ void OriginalStats::PrintGLasVcf( string & vcf_name )
 			}
 			else { // compare with previous anchor
 				if ( cell_it->win_index - infoPtr->anchor_end > Times ) { // not consecutive. start new anchor. print old anchor
-					printSingleMergeCell( outVcf, anchor, chr_name, infoPtr );
+					if ( SINGLE_SIDE || ((!SINGLE_SIDE) & infoPtr->both_end) )
+						printSingleMergeCell( outVcf, anchor, chr_name, infoPtr );
 					delete infoPtr;
 					anchor = cell_it;
 					infoPtr = new SingleCellPrint( anchor->win_index, anchor->ptr->GL, anchor->ptr->counts );
@@ -262,8 +263,10 @@ void OriginalStats::PrintGLasVcf( string & vcf_name )
 			}
 		}
 	// print out last anchor
-		if ( infoPtr != NULL )
-			printSingleMergeCell( outVcf, anchor, chr_name, infoPtr );
+		if ( infoPtr != NULL ) {
+			if ( SINGLE_SIDE || ( (!SINGLE_SIDE) & infoPtr->both_end ) )
+				printSingleMergeCell( outVcf, anchor, chr_name, infoPtr );
+		}
 	}
 	outVcf.close();
 }

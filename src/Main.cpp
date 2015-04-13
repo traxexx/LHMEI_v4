@@ -16,11 +16,11 @@ int main(int argc, char * argv[])
 	std::string Dummies;
 	std::string PATH = std::string("/net/wonderland/home/saichen/LHMEI_v4");
 	
-	ArgString += "-Win=600;-Step=100;-CtrlChr=20;-Simplify=1;-MElist=" + PATH + "/refs/MobileElement.list;-MEcoord=";
+	ArgString += "-Win=600;-Step=100;-CtrlChr=20;-Simplify=1;-NonOffset=1;-MElist=" + PATH + "/refs/MobileElement.list;-MEcoord=";
 	ArgString += PATH + "/refs/MobileElement.coord;-Mapper=bwa;-HetIndex=";
 	ArgString += PATH + "/refs/hs37d5-chr20-MEI-slice.het-index;-Chr=-1;";
 	
-	Dummies = std::string("--verbose;--debug;--keepIntermediates;");
+	Dummies = std::string("--verbose;--debug;--keepIntermediates;--includeSingleAnchor");
 	
 	std::string FirstArg = std::string(argv[1]);
 	if (FirstArg.compare("Test") == 0) {  // test mode (intermediate file is default kept)
