@@ -337,6 +337,7 @@ void ReadMap::setCandidateRegion( vector< std::pair<int, int> > & candidate_regi
 	level_file.open(level_name);
 	CheckInputFileStatus(level_file, level_name);
 	string line;
+	int Non_level = LEVEL + 1; // if non, then what is the level?
 	int prev_end = 0; // previous ending position
 	int prev_st = 0; // previous start position
 	while(std::getline( level_file, line )) {
@@ -344,9 +345,11 @@ void ReadMap::setCandidateRegion( vector< std::pair<int, int> > & candidate_regi
 		ss << line;
 		string st_str;
 		std::getline(ss, st_str, '\t');
-		string level_str;
-		std::getline(ss, level_str, '\t');
-		if ( stoi(level_str) >= LEVEL ) {
+		string evidence_level_str;
+		std::getline(ss, evidence_level_str, '\t');
+		string non_level_str;
+		std::getline(ss, non_level_str, '\t');
+		if ( stoi(evidence_level_str) >= LEVEL || stoi(non_level_str) >= Non_level ) {
 			int st = stoi(st_str);
 			if ( st <= prev_end ) { // continuous, only change prev_end
 				prev_end = st + win_len;
@@ -369,7 +372,7 @@ void ReadMap::setCandidateRegion( vector< std::pair<int, int> > & candidate_regi
 		new_pair.first = prev_st;
 		new_pair.second = prev_end;
 		candidate_region.push_back(new_pair);
-	}	
+	}
 	
 	level_file.close();
 }
