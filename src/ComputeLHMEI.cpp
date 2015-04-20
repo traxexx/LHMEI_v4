@@ -81,17 +81,16 @@ void ComputeLHMEI (Options * ptrMainOptions)
 	  	cmd = string("bam bam2FastQ --in ") + ctrl_dir + REF_CHR + "-nsort.bam --readName --outBase " + ctrl_dir + REF_CHR;
 	  	ExecuteCmd(cmd);
 	  // re-map
-	  	string slice_ref = ptrMainOptions->ArgMap["ProgramDir"] + "/refs/slice-chr20-hs37d5.fa ";
 	  	string fastq_prefix = ctrl_dir + REF_CHR;
 	  	string remapSam = ctrl_dir + "align-pe.sam";
-	  	cmd = GetRemapCmd(ptrMainOptions->ArgMap["Mapper"], fastq_prefix, slice_ref, remapSam);
+	  	cmd = GetRemapCmd(ptrMainOptions->ArgMap["Mapper"], fastq_prefix, ptrMainOptions->ArgMap["SliceFA"], remapSam);
 	  	ExecuteCmd(cmd);
 	  // sort by coord
 	  	cmd = string("samtools sort ") + remapSam + " " + ctrl_dir + REF_CHR + "-remap-sort";
 	  	ExecuteCmd(cmd);
 	  // dedup
 	  	cmd = string("bam dedup --recab --in ") + ctrl_dir + REF_CHR + "-remap-sort.bam --out ";
-	  	cmd += ctrl_bam + " --force --refFile " + slice_ref + "--storeQualTag OQ --maxBaseQual 40";
+	  	cmd += ctrl_bam + " --force --refFile " + ptrMainOptions->ArgMap["SliceFA"] + " --storeQualTag OQ --maxBaseQual 40";
 	  	ExecuteCmd(cmd);
 	  // generate .bai
 	  	cmd = string("samtools index ") + ctrl_bam;

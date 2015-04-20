@@ -53,6 +53,7 @@ void DisplayDetailedUsageInfo()
 	cout << "    -NonOffset: #More non-evidence reads required to exam a region. [1]" << endl;
 	cout << "    -MElist:  List of MEI consensus sequences. [refs/MobileElement.list]" << endl;
 	cout << "    -MEcoord:  List of MEI genome coordinate beds. [refs/MobileElement.coord]" << endl;
+	cout << "    -SliceFA:  Genome fasta of sliced-MEI. [refs/slice-chr20-hs37d5.fa]" << endl;
 	cout << "    -HetIndex: Het index file. [refs/hs37d5-chr20-MEI-slice.het-index]" << endl;
 	cout << "    --debug:  Print detailed running info for debug. [off]" << endl;
 	cout << "    --keepIntermediates: Keep intermediate files. [off]" << endl;

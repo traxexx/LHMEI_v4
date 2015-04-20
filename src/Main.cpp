@@ -20,6 +20,7 @@ int main(int argc, char * argv[])
 	
 	ArgString = "-Win=600;-Step=100;-CtrlChr=20;-Simplify=1;-NonOffset=1;-Chr=-1;";
 	ArgString += "-MElist=" + RefPath + "MobileElement.list;-MEcoord=" + RefPath + "MobileElement.coord;-HetIndex=" + RefPath + "hs37d5-chr20-MEI-slice.het-index;";
+	ArgString += "-SliceFA=" + RefPath + "refs/slice-chr20-hs37d5.fa;";
 	ArgString += "-Mapper=/net/wonderland/home/mktrost/dev/gotcloud/bin/bwa-mem;";
 	
 	Dummies = std::string("--verbose;--debug;--keepIntermediates;--includeSingleAnchor;--pseudoChr");
