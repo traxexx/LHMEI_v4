@@ -25,6 +25,8 @@ void ComputeLHMEI (Options * ptrMainOptions)
 	STEP = stoi(ptrMainOptions->ArgMap["Step"]);
 	string REF_CHR = ptrMainOptions->ArgMap["CtrlChr"];
 
+
+/*** set globals ****/
 // set debug mode
 	if (ptrMainOptions->OptMap["debug"])
 		DEBUG_MODE = 1;
@@ -32,6 +34,12 @@ void ComputeLHMEI (Options * ptrMainOptions)
 // set single end
 	if ( ptrMainOptions->OptMap["includeSingleAnchor"] )
 		SINGLE_SIDE = 1;
+		
+// pseodu-chr
+	if ( ptrMainOptions->OptMap["pseudoChr"] )
+		PSEUDO_CHR = 1;
+
+/*** globals complete ***/
 
 	string work_dir = ptrMainOptions->ArgMap["WorkDir"];
 	if (work_dir[ work_dir.size() - 1 ] != '/')

@@ -249,6 +249,9 @@ void GenerateLevelListFromDiscBam( const char * disc_name, const char * list_pre
 	for( map<string, vector< std::pair<int, int> > >::iterator mit = levelMap.begin(); mit != levelMap.end(); mit++ ) {
 		ofstream list_file;
 		string list_name = string(list_prefix) + "." + mit->first;
+		if ( mit->first.length() > 5 && (!PSEUDO_CHR) ) { // skip pseudo chr
+			continue;
+		}
 		list_file.open(list_name.c_str());
 		CheckOutFileStatus(list_file, list_name.c_str());
 		vector< std::pair<int, int> >::iterator it = mit->second.begin();

@@ -274,6 +274,9 @@ void ReadMap::SetMapFromBam
 	for(int i=0; i< samHeader.getNumSQs(); i++) {  
 		String chr_name_str = samHeader.getReferenceLabel(i);
 		string chr_name = string(chr_name_str.c_str());
+		if ( chr_name.length() > 5 && (!PSEUDO_CHR)) { // skip pseudo chr
+			continue;
+		}
 		if ( strlen(focus_chr) > 0 && chr_name.compare(focus_chr) != 0 )
 			continue;
 		vector< std::pair<int, int> > candidate_region;
