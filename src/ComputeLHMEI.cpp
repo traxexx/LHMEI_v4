@@ -140,6 +140,13 @@ void ComputeLHMEI (Options * ptrMainOptions)
 	AllHetIndex allHetIndex;
 	SetAllHetIndex( ptrMainOptions->ArgMap["HetIndex"].c_str(), allHetIndex );
 	string sample_name = ptrMainOptions->ArgMap["-Sample"];
+	if ( sample_name.compare(".") == 0 ) { // sample name not specified. Use base name of -Bam with no .bam prefix
+		string base_name = GetFileBaseName( ptrMainOptions->ArgMap["Bam"] );
+		string suffix = base_name.substr( base_name.length() - 4 );
+		if ( suffix.compare(".bam") == 0 && base_name.length() > 4 )
+			base_name = base_name.substr(0, base_name.length() - 4);
+		sample_name = base_name;
+	}
 // do by mei type
 	for( int mei_type = 0; mei_type <= 2; mei_type++ ) {
 		cout << "Discovering mei-type: " << mei_type << " ..." << endl;
