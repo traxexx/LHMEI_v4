@@ -4,11 +4,11 @@ Simple Usage (discovery phase): [] is default.
   *  -Bam:  Raw bam files for LHMEI discovery. MUST be sorted by cooridinate.
   *  -WorkDir:  Working directory (if not exist, LHMEI will create one).
   *  -Mapper:  Mapper used to generate the raw bam. [MK's bwa mem]
-	 -Sample:  Sample name. [basename of -Bam]
-	 -Chr:  Chr to discover. -1 means whole genome. [-1]
-	 -Win:  Sliding window size in bp. [600]
-	 -Step:  Moving step of sliding window. [100]
-	 --verbose:  Print user defined options out. [off]
+     -Sample:  Sample name. [basename of -Bam]
+     -Chr:  Chr to discover. -1 means whole genome. [-1]
+     -Win:  Sliding window size in bp. [600]
+     -Step:  Moving step of sliding window. [100]
+     --verbose:  Print user defined options out. [off]
 	
 
 Default HetIndex:
