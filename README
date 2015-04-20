@@ -1,5 +1,5 @@
 Simple Usage (discovery phase): [] is default.
-	Test:  Run test commands. Override all single dash options.
+     Test:  Run test commands. Override all single dash options.
 	
   *  -Bam:  Raw bam files for LHMEI discovery. MUST be sorted by cooridinate.
   *  -WorkDir:  Working directory (if not exist, LHMEI will create one).
