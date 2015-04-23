@@ -62,7 +62,7 @@ class RefStats
   	void ReAdjustSelfsWithLiftOver();
   	void PrintCtrlGLasRecord( string & outRecord, bool detailed ); // generate ctrl lh, report %power, #novel
   	
-	void _PrintRefStats( const char* out_prefix ); // debug function: print to out_prefix.0 neg .1 het, .2 hom
+	void PrintRefStats( string & out_prefix ); // debug function: print to out_prefix.0 neg .1 het, .2 hom
 
   private:
 // inner data

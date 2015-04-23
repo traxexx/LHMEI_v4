@@ -11,4 +11,6 @@ void DisplayUsageInfo();
 
 void DisplayDetailedUsageInfo();
 
+void DisplayDebugUsageInfo();
+
 #endif

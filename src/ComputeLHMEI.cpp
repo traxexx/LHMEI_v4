@@ -38,6 +38,10 @@ void ComputeLHMEI (Options * ptrMainOptions)
 // pseodu-chr
 	if ( ptrMainOptions->OptMap["pseudoChr"] )
 		PSEUDO_CHR = 1;
+		
+// non-variant
+	if ( ptrMainOptions->OptMap["printNonVariant"] )
+		PRINT_NON_VARIANT = 1;
 
 /*** globals complete ***/
 
@@ -166,6 +170,10 @@ void ComputeLHMEI (Options * ptrMainOptions)
 			string outRecord = work_dir + "refLH." + std::to_string(mei_type) + ".report";
 		// ref LH
 			rStats->PrintCtrlGLasRecord( outRecord, 1 );
+			if ( ptrMainOptions->OptMap["printRefStats"] ) { // debug: print refStats
+				string refPrefix = ptrMainOptions->ArgMap["refPrefix"] + "." + std::to_string(mei_type);
+				rStats->PrintRefStats( refPrefix );
+			}
 			rStats->MarkRefLHasDone();
 			rStats->ReAdjustSelfsWithLiftOver();
 		// data LH: loop-through bam dir ---> re-organize --> 
@@ -174,7 +182,11 @@ void ComputeLHMEI (Options * ptrMainOptions)
 			if ( focus_chr_str.compare("-1") != 0 ) { // single chr
 				string data_proper_name = bam_dir + "proper-" + focus_chr_str;
 				string data_disc_name = bam_dir + "disc-" + focus_chr_str;
-				dataOsPtr->Add( focus_chr_str, data_proper_name, data_disc_name );
+				bool add_success = dataOsPtr->Add( focus_chr_str, data_proper_name, data_disc_name );
+				if ( !add_success ) {
+					cerr << "Warning: no available proper reads in chromesome " << focus_chr_str << ", skipped this chr on mei_type = " << mei_type << "!" << endl;
+					continue;
+				}
 			}
 			else { // loop through bam dir
 				struct dirent *pDirent;
@@ -184,6 +196,7 @@ void ComputeLHMEI (Options * ptrMainOptions)
 					cerr << "ERROR: Cannot open " << bam_dir << endl;
 					exit(1);
 				}
+				bool add_success = 0;
 				while ((pDirent = readdir(pDir)) != NULL) {
 					string data_proper_name = pDirent->d_name;
 					if ( data_proper_name[ data_proper_name.size() - 1 ] != '3' ) // only read 3 since disc do not have 3
@@ -221,9 +234,15 @@ void ComputeLHMEI (Options * ptrMainOptions)
 					data_proper_name = data_proper_name.substr( 0, data_proper_name.size() - 2 );
 					string data_disc_name = data_proper_name;
 					data_disc_name.replace( slash_loc + 1, 6, string("disc") );
-					dataOsPtr->Add( current_chr, data_proper_name, data_disc_name );
+					bool single_success = dataOsPtr->Add( current_chr, data_proper_name, data_disc_name );
+					if (single_success)
+						add_success = 1;
 				}
 				closedir( pDir );
+				if ( !add_success ) {
+					cerr << "Warning: no available proper reads in all chrs, skipped this chr on mei_type = " << mei_type << "!" << endl;
+					continue;
+				}
 			}
 		// re-organize & clear under level
 			dataOsPtr->ReOrganize();

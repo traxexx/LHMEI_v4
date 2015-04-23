@@ -27,8 +27,9 @@ int main(int argc, char * argv[])
 	ArgString += "-MElist=" + RefPath + "MobileElement.list;-MEcoord=" + RefPath + "MobileElement.coord;-HetIndex=" + RefPath + "hs37d5-chr20-MEI-slice.het-index;";
 	ArgString += "-SliceFA=" + RefPath + "slice-chr20-hs37d5.fa;";
 	ArgString += "-Mapper=/net/wonderland/home/mktrost/dev/gotcloud/bin/bwa-mem;";
+	ArgString += "-refPrefix=refStats;";
 	
-	Dummies = std::string("--verbose;--debug;--keepIntermediates;--includeSingleAnchor;--pseudoChr");
+	Dummies = std::string("--verbose;--debug;--keepIntermediates;--includeSingleAnchor;--pseudoChr;--printNonVariant;--printRefStats");
 	
 	std::string FirstArg = std::string(argv[1]);
 	if (FirstArg.compare("Test") == 0) {  // test mode (intermediate file is default kept)
@@ -42,6 +43,11 @@ int main(int argc, char * argv[])
 	else if (FirstArg.compare("-h") == 0) { // display detailed help info
 		std::cout << std::endl;
 		DisplayDetailedUsageInfo();
+		return 0;
+	}
+	else if (FirstArg.compare("-hello") == 0) { // display debug usage info
+		DisplayDetailedUsageInfo();
+		DisplayDebugUsageInfo();
 		return 0;
 	}
 	else {  // normal mode

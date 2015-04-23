@@ -43,7 +43,7 @@ class OriginalStats
   	OriginalStats( int mei_type, string & sample_name );
   	~OriginalStats();
   	
-	void Add( string current_chr, string & proper_name, string & disc_name );
+	bool Add( string current_chr, string & proper_name, string & disc_name );
 	void ReOrganize();
 	void ClearUnderLevelMergeCells();
 	void PrintGLasVcf( string & vcf_name ); // print to vcf

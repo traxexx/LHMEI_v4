@@ -49,12 +49,15 @@ OriginalStats::~OriginalStats() {}
 
 
 // add
-void OriginalStats::Add( string current_chr, string & proper_name, string & disc_name )
+bool OriginalStats::Add( string current_chr, string & proper_name, string & disc_name )
 {
 	ifstream properFile;
 	string proper_zero = string(proper_name) + ".0";
 	properFile.open( proper_zero.c_str() );
-	CheckInputFileStatus( properFile, proper_name.c_str() );
+	if ( !properFile.is_open() ) {
+		cerr << "Warning: Can't open " << proper_zero << " when adding to OriginalStats!" << endl;
+		return 0; // add fail
+	}
 // add .0 first
 	int current_chr_index = chrNameHash.size();
 	if ( chrNameHash.find( current_chr ) != chrNameHash.end() ) {
@@ -93,6 +96,7 @@ void OriginalStats::Add( string current_chr, string & proper_name, string & disc
 // then disc
 	string new_disc_name = disc_name + string(".") + to_string(mei_index);
 	appendRawStats( new_disc_name, DiscStart );
+	return 1;
 }	
 
 // append, used in add clip & disc
@@ -188,10 +192,11 @@ void OriginalStats::ReOrganize()
   		}
   	}
 
-// sort genome location map by chr
+// sort genome location map per chr
 	for( map< string, vector< GenomeLocationCell > >::iterator map_it = GenomeLocationMap.begin(); map_it != GenomeLocationMap.end(); map_it++ ) {
 		std::sort( map_it->second.begin(), map_it->second.end(), sortGenomeLocations );
 	}
+	
 // clear
 	rawStats.clear();
 }
@@ -226,11 +231,37 @@ void OriginalStats::PrintGLasVcf( string & vcf_name )
 		GlcPtr anchor; // mark the anchor
 		SingleCellPrint* infoPtr = NULL; // if NULL, anchor has not assigned yet
 		for( GlcPtr cell_it = map_it->second.begin(); cell_it != map_it->second.end(); cell_it++ ) {
-			if( cell_it->ptr->GL.size() != 3 )
+			if (PRINT_NON_VARIANT) { // for debug purpose only
+				outVcf << chr_name << "\t" << cell_it->win_index << "\t.\t.\t<INS:ME:" << mei_name << ">\t";
+				MergeCellPtr Merge = cell_it->ptr;
+				int clip_count = getSumSupportClips( Merge->counts );
+				int disc_count = getSumSupportDiscs( Merge->counts);
+				int unmap_count = getSumSupportUnmaps( Merge->counts );
+				bool left_present = Merge->counts[4] + Merge->counts[13] + Merge->counts[17];
+				bool right_present = Merge->counts[9] + Merge->counts[11] + Merge->counts[15];
+				bool both_end = left_present & right_present;
+				outVcf << "-1\tPASS\tBOTH_END=" << both_end << "\t" << ";CLIP=" << clip_count << ";DISC=" << disc_count << ";UNMAP=" << unmap_count;
+				outVcf << ";";
+				for( vector<int>::iterator p = Merge->counts.begin(); p != Merge->counts.end(); p++ ) {
+					outVcf << *p << ",";
+				}
+				int dp = GetVecSum( Merge->counts );
+				outVcf << "\tGT:DP:GQ:PL\t";
+				if( cell_it->ptr->GL.size() == 3 ) {
+					string genotype = GetGenotype( Merge->GL );
+					outVcf << genotype << ":" << dp << ":-1:";
+					outVcf << Merge->GL[0] << "," << Merge->GL[1] << "," << Merge->GL[2] << endl;
+				}
+				else {
+					outVcf << "0/0:" << dp << ":-1:NA,NA,NA" << endl;
+				}
+			}
+			if( cell_it->ptr->GL.size() != 3 ) { // skip under level
 				continue;
-//if(infoPtr) printSingleMergeCell( outVcf, cell_it, chr_name, infoPtr );		
-			if ( cell_it->ptr->GL[0] >= cell_it->ptr->GL[1] && cell_it->ptr->GL[0] >= cell_it->ptr->GL[2] ) // skip the window with no variant
+			}
+			if ( cell_it->ptr->GL[0] >= cell_it->ptr->GL[1] && cell_it->ptr->GL[0] >= cell_it->ptr->GL[2] ) { // skip the window with no variant
 				continue;
+			}
 			
 			if ( infoPtr == NULL ) { // new anchor
 				anchor = cell_it;

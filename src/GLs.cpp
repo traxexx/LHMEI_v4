@@ -22,9 +22,9 @@ float GetGLfromCounts( vector<int> & counts, vector<float> & ref )
 // sum 2 log-p
 float SumGL( float original, float single )
 {
-	if ( original - single >= 14 )
+	if ( original - single >= 7 )
 		return original;
-	if ( original - single <= -14 )
+	if ( original - single <= -7 )
 		return single;
 // do sum
 	float mid = ( original + single ) / 2;
@@ -36,11 +36,11 @@ float SumGL( float original, float single )
 // minus a log-p from conjugate. If compensate > original, return 1;
 float MinusGL( float original, float compensate)
 {	
-	if ( original - compensate <= -14 ) { // need to re-calculate outside
+	if ( original - compensate < 0 ) { // need to re-calculate outside
 		cerr << "ERROR: compensate - original > 5. Cannot calculate minusGL!" << endl;
 		exit(1);
 	}
-	if ( original - compensate >= 14) { // no compensate
+	if ( original - compensate >= 7) { // no compensate
 		return original;
 	}
 	float mid = ( original + compensate ) / 2;

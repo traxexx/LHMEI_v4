@@ -7,6 +7,7 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <algorithm>
 #include "Utilities.h"
 
 using std::cout;
@@ -61,15 +62,9 @@ void RefStats::SetRecordGL( MergeCellPtr & merge )
 	}
 }
 
-// print ctrl power & novel info
+// print ctrl power & novel info: detailed is an old parameter, no use now
 void RefStats::PrintCtrlGLasRecord( string & outRecord, bool detailed )
-{
-// report %power & # novel to log
-	
-
-	if (!detailed)
-		return;
-// if detailed, print all LH out		
+{	
 	osPtr->PrintGLasVcf( outRecord );
 // clear ref data
 	delete osPtr;
@@ -85,6 +80,7 @@ void RefStats::setCtrlGLs()
 	for( MergeCellPtr merge_it = osPtr->MergeData.begin(); merge_it != osPtr->MergeData.end(); merge_it++ ) {
 		SetRecordGL( merge_it );
 	}
+	
 	AdjustUsedLoci( osPtr );
 }
 
@@ -97,7 +93,8 @@ void RefStats::setCtrlGLs()
 void RefStats::AdjustUsedLoci(  OriginalStats * dataOsPtr )
 {
 // initialize special merge data
-	dataOsPtr->SpecialMergeData.resize( selfHom.size() + (selfHet.size() + selfNeg.size()) * 3 );
+	int destroy_range = WIN / STEP * 2;
+	dataOsPtr->SpecialMergeData.resize( selfHom.size() + (selfHet.size() + selfNeg.size()) * (destroy_range * 2 + 1) );
 	MergeCellPtr special_ptr = dataOsPtr->SpecialMergeData.begin();
 // add to special
 	for( GlcPtr genome = dataOsPtr->GenomeLocationMap[ REF_CHR ].begin(); genome != dataOsPtr->GenomeLocationMap[ REF_CHR ].end(); genome++ ) {
@@ -108,6 +105,7 @@ void RefStats::AdjustUsedLoci(  OriginalStats * dataOsPtr )
 		map< int, SelfHomElement >::iterator hom_map = selfHom.find( genome->win_index );
 		MergeCellPtr data_ptr = genome->ptr;
 		if ( hom_map != selfHom.end() ) { // in hom
+//cout << genome->win_index << "\tHOM" << endl;
 			special_ptr->GL = data_ptr->GL;
 			special_ptr->dups = 1;
 			special_ptr->counts = data_ptr->counts;
@@ -126,11 +124,15 @@ void RefStats::AdjustUsedLoci(  OriginalStats * dataOsPtr )
 			special_ptr++;
 		}
 		else { // maybe it's neg or het?
-			vector<int> search_range { -1, 0, 1 }; // search range
+			vector<int> search_range;
+			for(int i = -destroy_range; i<= destroy_range; i++)
+				search_range.push_back(i);
+			
 			for( vector<int>::iterator range_ptr = search_range.begin(); range_ptr != search_range.end(); range_ptr++ ) {
 				SelfSingleMap::iterator neg_map = selfNeg.find( genome->win_index + (*range_ptr) );
 				SelfSingleMap::iterator het_map = selfHet.find( genome->win_index + (*range_ptr) );
 				if ( neg_map != selfNeg.end() ) { //  in neg
+//cout << genome->win_index << "\tNEG" << endl;
 					special_ptr->GL = data_ptr->GL;
 					special_ptr->dups = 1;
 					special_ptr->counts = data_ptr->counts;
@@ -145,6 +147,7 @@ void RefStats::AdjustUsedLoci(  OriginalStats * dataOsPtr )
 					special_ptr++;
 				}
 				else if ( het_map != selfHet.end() ) { // in het
+//cout << genome->win_index << "\tHET" << endl;
 					special_ptr->GL = data_ptr->GL;
 					special_ptr->dups = 1;
 					special_ptr->counts = data_ptr->counts;
@@ -205,7 +208,8 @@ void RefStats::ReAdjustSelfsWithLiftOver()
 // update keys by lift over
 // way to solve collision: if find same key, add the new to extra; then append extra to selfNeg
   // why? since no 2 new key should be the same
-void RefStats::updateSelfSingleMapKeys( SelfSingleMap & selfMap ) {
+void RefStats::updateSelfSingleMapKeys( SelfSingleMap & selfMap )
+{
 	SelfSingleMap extra_map;
 	vector<int> old_keys;
 	for ( SelfSingleMap::iterator map_it = selfMap.begin(); map_it != selfMap.end(); map_it++ )
@@ -243,7 +247,7 @@ void RefStats::adjustSingleGL( vector<int> & counts, StatCellPtr & stat_ptr, Mer
 {
 	float compensate = GetGLfromCounts( counts, stat_ptr->log_frac );
 	float original =  special_ptr->GL[ s_ref ] + log( RefCounts[ s_ref ] );
-	if ( original - compensate <= -5 ) { // set new GL
+	if ( original - compensate <= 3 ) { // set new GL
 		setSingleRefGLWithExclusion( counts, stat_ptr, special_ptr, s_ref);
 	}
 	else { // minus GL
@@ -259,6 +263,7 @@ void RefStats::setSingleRefGLWithExclusion( vector<int> & counts, StatCellPtr & 
 {
 	float conjugate_gl = 0;
 	bool skipped = 0;
+	bool is_first = 1;
 	for( vector<StatCell>::iterator upper_it = refStats[ s_ref ].begin(); upper_it != refStats[s_ref].end(); upper_it++) {
 	  // see if skipped
 		if (!skipped) {
@@ -271,8 +276,10 @@ void RefStats::setSingleRefGLWithExclusion( vector<int> & counts, StatCellPtr & 
 		if ( s_ref == 0 ) // for neg, also multiply #dups as weight
 			single_gl += log( upper_it->dups );
 // add 2 together
-		if ( conjugate_gl == 0 )
+		if ( is_first ) {
 			conjugate_gl = single_gl;
+			is_first = 0;
+		}
 		else
 			conjugate_gl = SumGL( conjugate_gl, single_gl );
 	}
@@ -285,17 +292,20 @@ void RefStats::adjustMultipleGL( vector<int> & counts, vector<unsigned int> & he
 {
 	vector<unsigned int>::iterator it_het = hets.begin();
 // sum all compensates
-	float compensate = 0;
+	float compensate;
+	bool is_first = 1;
 	for( ; it_het != hets.end(); it_het++ ) {
 		float single_gl = GetGLfromCounts( counts, refStats[1][*it_het].log_frac );
-		if ( compensate == 0 )
+		if ( is_first ) {
 			compensate = single_gl;
+			is_first = 0;	
+		}
 		else
 			compensate = SumGL( compensate, single_gl );
 	}
 // see if need to re-calculate
 	float original =  special_ptr->GL[1] + log( RefCounts[1] );
-	if ( original - compensate > -5 ) { // only do minus
+	if ( original - compensate > 3 ) { // only do minus
 		float new_gl = MinusGL( original, compensate );	
 		new_gl -= log( RefCounts[1] - 10 );
 		special_ptr->GL[1] = new_gl;
@@ -305,6 +315,7 @@ void RefStats::adjustMultipleGL( vector<int> & counts, vector<unsigned int> & he
 // add now
 	unsigned int dist = 0;
 	float conjugate_gl;
+	is_first = 1;
 	for( vector<StatCell>::iterator upper_it = refStats[1].begin(); upper_it != refStats[1].end(); dist++, upper_it++) {
 	// check if exclude
 		if (it_het != hets.end()) {
@@ -315,8 +326,10 @@ void RefStats::adjustMultipleGL( vector<int> & counts, vector<unsigned int> & he
 		}
 		float single_gl = GetGLfromCounts( counts, upper_it->log_frac );
     // add 2 together
-		if ( conjugate_gl == 0 )
+		if ( is_first ) {
 			conjugate_gl = single_gl;
+			is_first = 0;
+		}
 		else
 			conjugate_gl = SumGL( conjugate_gl, single_gl );		
 	}
@@ -332,14 +345,17 @@ void RefStats::adjustMultipleGL( vector<int> & counts, vector<unsigned int> & he
 // only for a ref in 0~2
 void RefStats::setSingleRefGL( MergeCellPtr & merge, int & s_ref )
 {
-	float conjugate_gl = 0;
+	float conjugate_gl;
+	bool is_first = 1;
 	for( vector<StatCell>::iterator upper_it = refStats[ s_ref ].begin(); upper_it != refStats[s_ref].end(); upper_it++) {
 		float single_gl = GetGLfromCounts( merge->counts, upper_it->log_frac );
 		if ( s_ref == 0 ) // for neg, also multiply #dups as weight
 			single_gl += log( upper_it->dups );
 // add 2 together
-		if (conjugate_gl == 0)
+		if ( is_first ) {
 			conjugate_gl = single_gl;
+			is_first = 0;
+		}
 		else
 			conjugate_gl = SumGL( conjugate_gl, single_gl );
 	}
@@ -366,7 +382,6 @@ void RefStats::setStatRef( AllHetIndex & allHetIndex )
 	RefCounts[1] = refStats[1].size();
 	int sum = 0;
 	for( vector< StatCell>::iterator it = refStats[0].begin(); it != refStats[0].end(); it++ ) {
-//cout << it->dups << endl;
 		sum += it->dups;
 	}
 	RefCounts[0] = sum;
@@ -439,6 +454,7 @@ void RefStats::setHomAndHetRef( AllHetIndex & allHetIndex )
 	vector<int> OtherIndex;
 	_setOtherIndex( OtherIndex );
 // destroy link
+	int destroy_range = WIN / STEP * 2; // on one side of hom #windows should be destroyed from neg
 	for( int i = 0; i <= 1; i++ ) {
 		int other_index = OtherIndex[i];
 		for( vector<HetRecord>::iterator het_rec = allHetIndex[ other_index ].begin(); het_rec != allHetIndex[ other_index ].end(); het_rec++ ) {
@@ -450,20 +466,20 @@ void RefStats::setHomAndHetRef( AllHetIndex & allHetIndex )
 			ptr += het_rec->hom.location;
 		// check begin boundary
 			int upper;
-			if ( het_rec->hom.location < 5 ) {
+			if ( het_rec->hom.location < destroy_range ) {
 				ptr = indexBasedGenomeLink.begin();
 				upper = het_rec->hom.location;	
 			}
 			else {
-				ptr -= 5;
-				upper = 5;
+				ptr -= destroy_range;
+				upper = destroy_range;
 			}
 		// check end boundary
-			int end_dist = (indexBasedGenomeLink.end() - ptr);
-			if ( end_dist < 10 )
+			int end_dist = (indexBasedGenomeLink.end() - 1 - ptr);
+			if ( end_dist <= 2*destroy_range )
 				upper += end_dist;
 			else
-				upper += 5;
+				upper += destroy_range;
 			for( int i = 0; i < upper; i++ )
 				_destroyGenomeLink( *ptr );
 		}	
@@ -513,7 +529,7 @@ void RefStats::setHomAndHetRef( AllHetIndex & allHetIndex )
 		  // add to selfHom
 		  	selfHom[ hom_index ].hets.push_back( het_ref_index );
 		  
-		  // add to selfHet	
+		  // add to selfHet
 			selfHet[ neg_index ].lift = het_cell->lift_over;
 			selfHet[ neg_index ].stat_index = het_ref_index;
 			
@@ -771,17 +787,13 @@ void SetAllHetIndex( const char* het_index_name, AllHetIndex & allHetIndex )
 // location is center
 int GetHomCoordIndex( int location )
 {
+	int index;
 	if ( location < WIN / 2 )
-		return 0;
+		index = 0;
 	else {
-		int half_times = WIN / STEP;
-		int index = round( location / float(STEP) );
-		if ( index >= half_times)
-			index -= half_times;
-		else
-			index = 0;
-		return index;
+		index = round( float(location - WIN / 2) / STEP );
 	}
+	return index;
 }
 
 // location is left boundary
@@ -793,10 +805,10 @@ int GetHetCoordIndex( int location )
 
 /**************************  debug functions ************************/
 // print out ref stats for debug purpose
-void RefStats::_PrintRefStats( const char* out_prefix )
+void RefStats::PrintRefStats( string & out_prefix )
 {
 	for(int s_ref = 0; s_ref <= 2; s_ref++) {
-		string s_ref_name = string(out_prefix) + "." + std::to_string(s_ref);
+		string s_ref_name = out_prefix + "." + std::to_string(s_ref);
 		std::ofstream s_ref_file;
 		s_ref_file.open( s_ref_name.c_str() );
 		CheckOutFileStatus( s_ref_file, s_ref_name.c_str() );

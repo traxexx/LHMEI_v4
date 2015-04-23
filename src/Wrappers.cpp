@@ -55,9 +55,18 @@ void DisplayDetailedUsageInfo()
 	cout << "    -MEcoord:  List of MEI genome coordinate beds. [refs/MobileElement.coord]" << endl;
 	cout << "    -SliceFA:  Genome fasta of sliced-MEI. [refs/slice-chr20-hs37d5.fa]" << endl;
 	cout << "    -HetIndex: Het index file. [refs/hs37d5-chr20-MEI-slice.het-index]" << endl;
-	cout << "    --debug:  Print detailed running info for debug. [off]" << endl;
 	cout << "    --keepIntermediates: Keep intermediate files. [off]" << endl;
 	cout << "    --includeSingleAnchor:  Keep hits with single anchor in output vcf. [off]" << endl;
 	cout << "    --pseudoChr:  Also run discovery on pseudoChr like GL000215.1. [off]" << endl;
+	cout << endl;
+}
+
+void DisplayDebugUsageInfo()
+{
+	cout << endl;
+	cout << "    --debug:  Print detailed running info for debug. [off]" << endl;
+	cout << "    --printNonVariant:  print all windows include GT=0/0. [off]" << endl;
+	cout << "    --printRefStats:  print out refStats. [off]" << endl;
+	cout << "    -refPrefix:  when --printRefStats toggled, prefix of refStats. [refStats]" << endl;
 	cout << endl;
 }
