@@ -148,7 +148,9 @@ void PreProcessBam( const char* inBam, const char* outSam, const char* ctrlChr,
 	std::cout << std::endl;
 	std::cout << "Pre-process raw bam..." << std::endl;
 	for(int i=0; i< samHeader.getNumSQs(); i++) {
-		std::string current_chr = chrNameVec[i];	
+		std::string current_chr = chrNameVec[i];
+		if ( current_chr.length() > 5 && (!PSEUDO_CHR)) // skip pseudo
+			continue;
 		bool section_status = samIn.SetReadSection(current_chr.c_str());
 		if (!section_status) {
 			std::cerr << "ERROR: Unable to set read section to chr " << current_chr << std::endl;

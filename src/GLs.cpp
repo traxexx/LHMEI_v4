@@ -22,9 +22,9 @@ float GetGLfromCounts( vector<int> & counts, vector<float> & ref )
 // sum 2 log-p
 float SumGL( float original, float single )
 {
-	if ( original - single >= 7 )
+	if ( original - single >= 14 )
 		return original;
-	if ( original - single <= -7 )
+	if ( original - single <= -14 )
 		return single;
 // do sum
 	float mid = ( original + single ) / 2;

@@ -60,8 +60,16 @@ void ComputeLHMEI (Options * ptrMainOptions)
 	string outSam = pre_dir + REF_CHR + ".sam";
 	string discNsortBam = pre_dir + "disc-nsort";
 	string discSam = pre_dir + "disc.sam";
-	int avr_read_len = GetAvrReadLenFromBam( ptrMainOptions->ArgMap["Bam"].c_str() );
-	int avr_ins_size = GetAvrInsSizeFromBam( ptrMainOptions->ArgMap["Bam"].c_str() );
+	int avr_read_len;
+	if ( stoi( ptrMainOptions->ArgMap["ReadLen"] ) == -1 )
+		avr_read_len = GetAvrReadLenFromBam( ptrMainOptions->ArgMap["Bam"].c_str() );
+	else
+		avr_read_len = stoi( ptrMainOptions->ArgMap["ReadLen"] );
+	int avr_ins_size;
+	if ( stoi( ptrMainOptions->ArgMap["InsSize"] ) == -1 )
+		avr_ins_size = GetAvrInsSizeFromBam( ptrMainOptions->ArgMap["Bam"].c_str() );
+	else
+		avr_ins_size = stoi( ptrMainOptions->ArgMap["InsSize"] );
 	if (!ExistDoneFile( pre_dir, "PreProcess" )) {
 		PreProcessBam( ptrMainOptions->ArgMap["Bam"].c_str(), outSam.c_str(), REF_CHR.c_str(),
 			discSam.c_str(), ptrMainOptions->ArgMap["MEcoord"].c_str(),
@@ -159,7 +167,12 @@ void ComputeLHMEI (Options * ptrMainOptions)
 		sample_name = base_name;
 	}
 // do by mei type
+	int focus_type = stoi(ptrMainOptions->ArgMap["MeiType"]);
 	for( int mei_type = 0; mei_type <= 2; mei_type++ ) {
+		if ( focus_type != -1 && mei_type != focus_type ) {
+			cout << "Skip mei type " << mei_type << "!" << endl;
+			continue;
+		}
 		cout << "Discovering mei-type: " << mei_type << " ..." << endl;
 		string lh_flag = string("LH-") + focus_chr_str + "." + std::to_string(mei_type);
 		if ( !ExistDoneFile( bam_dir, lh_flag.c_str() ) ) {	
@@ -169,7 +182,8 @@ void ComputeLHMEI (Options * ptrMainOptions)
 			RefStats* rStats = new RefStats( ctrl_proper_prefix, ctrl_disc_prefix, mei_type, allHetIndex );
 			string outRecord = work_dir + "refLH." + std::to_string(mei_type) + ".report";
 		// ref LH
-			rStats->PrintCtrlGLasRecord( outRecord, 1 );
+			if ( !( ptrMainOptions->OptMap["noCtrlVcf"] ) )
+				rStats->PrintCtrlGLasRecord( outRecord, 1 );
 			if ( ptrMainOptions->OptMap["printRefStats"] ) { // debug: print refStats
 				string refPrefix = ptrMainOptions->ArgMap["refPrefix"] + "." + std::to_string(mei_type);
 				rStats->PrintRefStats( refPrefix );
@@ -178,7 +192,8 @@ void ComputeLHMEI (Options * ptrMainOptions)
 			rStats->ReAdjustSelfsWithLiftOver();
 		// data LH: loop-through bam dir ---> re-organize --> 
 			OriginalStats* dataOsPtr = new OriginalStats( mei_type, sample_name );
-		  //add
+			
+		  //add to memory
 			if ( focus_chr_str.compare("-1") != 0 ) { // single chr
 				string data_proper_name = bam_dir + "proper-" + focus_chr_str;
 				string data_disc_name = bam_dir + "disc-" + focus_chr_str;

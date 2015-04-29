@@ -30,6 +30,7 @@ void DisplayUsageInfo()
 {
 	cout << endl;
 	cout << "Usage: [] is default. Please pecify those * options." << endl;
+	cout << "    Use -h to show advanced options." << endl;
 	cout << "    Test:  Run test commands. Override all single dash options." << endl;
 	cout << endl;
 	cout << " *  -Bam:  Raw bam files for LHMEI discovery. MUST be sorted by cooridinate." << endl;
@@ -64,6 +65,10 @@ void DisplayDetailedUsageInfo()
 void DisplayDebugUsageInfo()
 {
 	cout << endl;
+	cout << "    -ReadLen:  specify read length. [-1]" << endl;
+	cout << "    -InsSize:  specify insert size. [-1]" << endl;
+	cout << "    -MeiType:  only discover the specific meitype [-1]" << endl;
+	cout << "    --noCtrlVcf:  do not output refLH.*.vcf for ctrl sliced bam. [Off]" << endl;
 	cout << "    --debug:  Print detailed running info for debug. [off]" << endl;
 	cout << "    --printNonVariant:  print all windows include GT=0/0. [off]" << endl;
 	cout << "    --printRefStats:  print out refStats. [off]" << endl;
