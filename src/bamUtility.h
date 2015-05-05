@@ -16,5 +16,7 @@ int GetAvrReadLenFromBam( const char* bam );
 
 int GetAvrInsSizeFromBam( const char* bam );
 
+float EstimateBamDepth( string & bam, int & readlen );
+
 #endif
 

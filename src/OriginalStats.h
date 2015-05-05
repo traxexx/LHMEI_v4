@@ -69,6 +69,8 @@ class OriginalStats
   	static const int ClipStart; // vector start of clip
   	static const int DiscStart;
   	static const int RawCellSize;
+  	static const float MinDepth; // for depth filter when print vcf
+  	static const float MaxDepth;
   	const int mei_index; // current mei type
   	string SampleName;
   	int current_add_start; // current start for adding rawStats

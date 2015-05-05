@@ -59,6 +59,7 @@ void DisplayDetailedUsageInfo()
 	cout << "    --keepIntermediates: Keep intermediate files. [off]" << endl;
 	cout << "    --includeSingleAnchor:  Keep hits with single anchor in output vcf. [off]" << endl;
 	cout << "    --pseudoChr:  Also run discovery on pseudoChr like GL000215.1. [off]" << endl;
+	cout << "    --disableDPfilter: disable depth filter. [off]" << endl;
 	cout << endl;
 }
 

@@ -21,6 +21,8 @@ using std::getline;
 const int OriginalStats::ClipStart = 2;
 const int OriginalStats::DiscStart = 10;
 const int OriginalStats::RawCellSize = 18;
+const float OriginalStats::MinDepth = DEPTH / 4;
+const float OriginalStats::MaxDepth = DEPTH / 4 * 7;
 
 
 // constructor: only set mei index
@@ -400,6 +402,11 @@ bool OriginalStats::setAnchorRank( bool & theRank, int & gq_peak, MergeCellPtr &
 void OriginalStats::printSingleMergeCell( ofstream & outVcf, GlcPtr & Ptr, string & chr_name, SingleCellPrint * infoPtr )
 {	
 	MergeCellPtr Merge = Ptr->ptr;
+	int depth = GetVecSum( Merge->counts );  // simpy add reads together
+	if ( DEPTH_FILTER ) {
+		if ( depth < MinDepth || depth > MaxDepth ) // filter by depth
+			return;
+	}
 	outVcf << chr_name << "\t" << infoPtr->central << "\t.\t.\t<INS:ME:" << mei_name << ">\t";
 	outVcf << infoPtr->gq_peak << "\tPASS\tSVTYPE=INS;END=";
 	outVcf << infoPtr->var_end << ";CIPOS=";
@@ -414,7 +421,6 @@ void OriginalStats::printSingleMergeCell( ofstream & outVcf, GlcPtr & Ptr, strin
 	vector<int> PL;
 	PL.clear();
 	SetPLsFromGL( PL, Merge->GL );
-	int depth = GetVecSum( Merge->counts );  // simpy add reads together
 	int gt_quality = GetGenotypeQuality( Merge->GL );
 	outVcf << genotype << ":" << depth << ":" << gt_quality << ":" << PL[0] << "," << PL[1] << "," << PL[2];
 	outVcf << endl;

@@ -6,12 +6,20 @@ bool SINGLE_SIDE = 0; // default not printing single-anchor resutls
 
 bool PSEUDO_CHR = 0; // default not discovering pseudo chr
 
-bool PRINT_NON_VARIANT = 0;
+bool PRINT_NON_VARIANT = 0; // do not print
+
+bool DEPTH_FILTER = 1; // default use depth filter
 
 int WIN = 0;
 
 int STEP = 0;
 
+std::string REF_CHR;
+
 int LEVEL;
 
 int NON_OFFSET;
+
+float DEPTH;
+//int READLEN;
+

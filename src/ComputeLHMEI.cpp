@@ -23,7 +23,7 @@ void ComputeLHMEI (Options * ptrMainOptions)
 	int step_len = stoi(ptrMainOptions->ArgMap["Step"]);
 	WIN = stoi(ptrMainOptions->ArgMap["Win"]);
 	STEP = stoi(ptrMainOptions->ArgMap["Step"]);
-	string REF_CHR = ptrMainOptions->ArgMap["CtrlChr"];
+	REF_CHR = ptrMainOptions->ArgMap["CtrlChr"];
 
 
 /*** set globals ****/
@@ -42,6 +42,10 @@ void ComputeLHMEI (Options * ptrMainOptions)
 // non-variant
 	if ( ptrMainOptions->OptMap["printNonVariant"] )
 		PRINT_NON_VARIANT = 1;
+
+// dp filter
+	if ( ptrMainOptions->OptMap["disableDPfilter"] )
+		DEPTH_FILTER = 0;
 
 /*** globals complete ***/
 
@@ -65,6 +69,14 @@ void ComputeLHMEI (Options * ptrMainOptions)
 		avr_read_len = GetAvrReadLenFromBam( ptrMainOptions->ArgMap["Bam"].c_str() );
 	else
 		avr_read_len = stoi( ptrMainOptions->ArgMap["ReadLen"] );
+	float dp = stoi( ptrMainOptions->ArgMap["Depth"] );
+	if ( dp < 0 ) {
+		dp = EstimateBamDepth( ptrMainOptions->ArgMap["Bam"], avr_read_len );
+		DEPTH = dp;
+	}
+	else { // convert dp to #reads in window
+		DEPTH = dp * WIN / avr_read_len / 2;
+	}
 	int avr_ins_size;
 	if ( stoi( ptrMainOptions->ArgMap["InsSize"] ) == -1 )
 		avr_ins_size = GetAvrInsSizeFromBam( ptrMainOptions->ArgMap["Bam"].c_str() );
