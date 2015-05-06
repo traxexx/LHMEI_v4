@@ -5,7 +5,7 @@ Usage: [] is default. Please pecify those * options.
  *  -Bam:  Raw bam files for LHMEI discovery. MUST be sorted by cooridinate.
  *  -WorkDir:  Working directory (if not exist, LHMEI will create one).
  *  -Mapper:  Mapper used to generate the raw bam. If not installed globally, please specify path. [/net/wonderland/home/mktrost/dev/gotcloud/bin/bwa-mem]
- *  -GenomeFasta: reference genome fasta. [/net/wonderland/home/saichen/reference/archive/hs37d5.fa]
+ *  -GenomeFasta: reference genome fasta. [ HOME hs37d5.fa]
     -Sample:  Sample name. [basename of -Bam]
     -Chr:  Chr to discover. -1 means whole genome. [-1]
     -Win:  Sliding window size in bp. [600]
