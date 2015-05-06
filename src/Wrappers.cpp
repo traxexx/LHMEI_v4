@@ -36,6 +36,7 @@ void DisplayUsageInfo()
 	cout << " *  -Bam:  Raw bam files for LHMEI discovery. MUST be sorted by cooridinate." << endl;
 	cout << " *  -WorkDir:  Working directory (if not exist, LHMEI will create one)." << endl;
 	cout << " *  -Mapper:  Mapper used to generate the raw bam. If not installed globally, please specify path. [/net/wonderland/home/mktrost/dev/gotcloud/bin/bwa-mem]" << endl;
+	cout << " *  -GenomeFasta: reference genome fasta. [/net/wonderland/home/saichen/reference/archive/hs37d5.fa]" << endl;
 	cout << "    -Sample:  Sample name. [basename of -Bam]" << endl;
 	cout << "    -Chr:  Chr to discover. -1 means whole genome. [-1]" << endl;
 	cout << "    -Win:  Sliding window size in bp. [600]" << endl;
@@ -60,6 +61,8 @@ void DisplayDetailedUsageInfo()
 	cout << "    --includeSingleAnchor:  Keep hits with single anchor in output vcf. [off]" << endl;
 	cout << "    --pseudoChr:  Also run discovery on pseudoChr like GL000215.1. [off]" << endl;
 	cout << "    --disableDPfilter: disable depth filter. [off]" << endl;
+	cout << "    --noRefAllele: do not output reference allele in output vcf. [off]" << endl;
+	cout << "    --noBreakPoint: do not refine break point by #spanning-reads. [off]" << endl;
 	cout << endl;
 }
 

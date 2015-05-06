@@ -10,6 +10,10 @@ bool PRINT_NON_VARIANT = 0; // do not print
 
 bool DEPTH_FILTER = 1; // default use depth filter
 
+bool BREAK_POINT = 1; // refine break point?
+
+bool REF_ALLELE = 1; // print ref base out?
+
 int WIN = 0;
 
 int STEP = 0;

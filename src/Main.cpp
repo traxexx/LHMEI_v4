@@ -24,12 +24,13 @@ int main(int argc, char * argv[])
 	std::string Dummies;
 	
 	ArgString = "-Win=600;-Step=100;-CtrlChr=20;-Simplify=1;-NonOffset=1;-Chr=-1;";
+	ArgString += "-GenomeFasta=/net/wonderland/home/saichen/reference/archive/hs37d5.fa;";
 	ArgString += "-MElist=" + RefPath + "MobileElement.list;-MEcoord=" + RefPath + "MobileElement.coord;-HetIndex=" + RefPath + "hs37d5-chr20-MEI-slice.het-index;";
 	ArgString += "-SliceFA=" + RefPath + "slice-chr20-hs37d5.fa;";
 	ArgString += "-Mapper=/net/wonderland/home/mktrost/dev/gotcloud/bin/bwa-mem;";
 	ArgString += "-refPrefix=refStats;-ReadLen=-1;-InsSize=-1;-MeiType=-1;-Depth=-1;";
 	
-	Dummies = std::string("--verbose;--debug;--keepIntermediates;--includeSingleAnchor;--pseudoChr;--printNonVariant;--printRefStats;--noCtrlVcf;--disableDPfilter");
+	Dummies = std::string("--verbose;--debug;--keepIntermediates;--includeSingleAnchor;--pseudoChr;--printNonVariant;--printRefStats;--noCtrlVcf;--disableDPfilter;--noRefAllele;--noBreakPoint");
 	
 	std::string FirstArg = std::string(argv[1]);
 	if (FirstArg.compare("Test") == 0) {  // test mode (intermediate file is default kept)

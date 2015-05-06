@@ -1,14 +1,17 @@
 #include <iostream>
 #include <stdlib.h>
+#include <algorithm>
 #include <utility> // exit
 #include "Utilities.h"
 #include <iterator>
 
+using std::cerr;
+using std::endl;
 
 void CheckInputFileStatus(std::ifstream & infile, const char* name)
 {
 	if (!infile.is_open()) {
-		std::cerr << "ERROR: Can't open input file " << name << std::endl;
+		cerr << "ERROR: Can't open input file " << name << endl;
 		exit(1);
 	}
 }
@@ -16,7 +19,7 @@ void CheckInputFileStatus(std::ifstream & infile, const char* name)
 void CheckOutFileStatus(std::ofstream & outfile, const char* name)
 {
 	if (!outfile.is_open()) {
-		std::cerr << "ERROR: Can't open output file " << name << std::endl;
+		cerr << "ERROR: Can't open output file " << name << endl;
 		exit(1);
 	}
 }
@@ -33,7 +36,7 @@ std::string getMeiTypeString(int & mei_type)
 		case 2:
 			MeiType = std::string("SVA"); break;
 		default:
-			std::cerr << "ERROR: illegal mei_type in ReadMap::PrintToVcf!" << std::endl; exit(1);
+			cerr << "ERROR: illegal mei_type in ReadMap::PrintToVcf!" << endl; exit(1);
 	}
 	return MeiType;
 }
@@ -46,6 +49,34 @@ int getSumOfVector( vector<int> & count_table )
 		sum += *it;
 	return sum;
 }
+
+// get avr loc of a specific value
+int GetAvrLocationOfCertainValue( vector<int> & vec, int & val, int & min_index, int & max_index )
+{
+	vector<int> index;
+	for( int i = 0; i < int(vec.size()); i++ ) {
+		if ( vec[i] == val )
+			index.push_back( i );
+	}
+	int loc;
+ 	if ( index.size() < 1 ) {
+ 		cerr << "ERROR: val does not exist in vec at GetAvrLocationOfCertainValue. Something is wrong?" << endl;
+ 		exit(1);
+ 	}
+ 	
+ 	min_index = index[0];
+ 	max_index = index[ int(index.size()) - 1 ];
+ 	
+ 	if ( index.size() == 1 ) {
+ 		loc = index[0];
+ 	}
+ 	else {
+ 		int sum = getSumOfVector( index );
+ 		loc = round( float(sum) / int( index.size() ) );
+ 	}
+ 	return loc;
+}
+
 
 // use as GQ in vcf
 /*
@@ -65,8 +96,8 @@ void ExecuteCmd( std::string & cmd )
 {
 	int cmd_status = system(cmd.c_str());
 	if (cmd_status != 0) {
-		std::cerr << "ERROR: Fail to run: " << cmd << std::endl;
-		std::cerr << "    Exit " << cmd_status << std::endl;
+		cerr << "ERROR: Fail to run: " << cmd << endl;
+		cerr << "    Exit " << cmd_status << endl;
 		exit(1);
 	}
 }
@@ -91,7 +122,7 @@ bool ExistDoneFile( std::string & work_dir, const char * prefix )
 	dfile.open(fname.c_str());
 	if ( dfile.good() ) {
 		dfile.close();
-		std::cout << "Warning: exist " << fname << ", skip related steps!" << std::endl;
+		std::cout << "Warning: exist " << fname << ", skip related steps!" << endl;
 		return 1;
 	}
 	return 0;
@@ -115,7 +146,7 @@ string GetRemapCmd( string & full_mapper, std::string fastq_prefix, std::string 
 		remap_cmd = mapper + " " + ref_fasta + " " + fastq_prefix + "_1.fastq " + fastq_prefix + "_2.fastq > " + remapSam;
 	}
 	else {
-		std::cerr << "ERROR: can't find command for the mapper: " << mapper_name << std::endl;
+		cerr << "ERROR: can't find command for the mapper: " << mapper_name << endl;
 		exit(1);
 	}
 	return remap_cmd;

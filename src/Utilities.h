@@ -16,6 +16,8 @@ std::string getMeiTypeString(int & mei_type);
 
 int getSumOfVector( vector<int> & count_table );
 
+int GetAvrLocationOfCertainValue( vector<int> & vec, int & val, int & min_index, int & max_index );
+
 int getSumOfMeiReads( vector<int> & count_table );
 
 void ExecuteCmd( std::string & cmd );

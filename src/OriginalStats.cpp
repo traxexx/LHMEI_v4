@@ -7,6 +7,7 @@
 #include "Utilities.h"
 #include "GLs.h"
 #include "Globals.h"
+#include "ProperDeckUtility.h"
 
 using std::cout;
 using std::cerr;
@@ -17,16 +18,13 @@ using std::ifstream;
 using std::stringstream;
 using std::getline;
 
-// static members
-const int OriginalStats::ClipStart = 2;
-const int OriginalStats::DiscStart = 10;
-const int OriginalStats::RawCellSize = 18;
-const float OriginalStats::MinDepth = DEPTH / 4;
-const float OriginalStats::MaxDepth = DEPTH / 4 * 7;
-
-
 // constructor: only set mei index
 OriginalStats::OriginalStats( int mei_type, string & sample_name ):
+	ClipStart (2),
+	DiscStart (10),
+	RawCellSize (18),
+	MinDepth ( DEPTH / 4 ),
+	MaxDepth ( DEPTH / 4 * 7 ),
 	mei_index( mei_type ),
 	SampleName( sample_name ),
 	current_add_start( 0 )
@@ -219,8 +217,26 @@ void OriginalStats::ClearUnderLevelMergeCells()
 }
 
 // print out
-void OriginalStats::PrintGLasVcf( string & vcf_name )
+void OriginalStats::PrintGLasVcf( string & vcf_name, string & bam_name, string & ref_fasta )
 {
+// open bam & load fasta
+	currentSam.OpenForRead( bam_name.c_str() );
+	if ( !currentSam.IsOpen() ) {
+		cerr << "ERROR: Unable to open " << bam_name << endl;
+		exit(1);
+	}
+	bool header_status = currentSam.ReadHeader( currentSamHeader );
+	if ( !header_status ) {
+		cerr << "ERROR: Unable to read header of " << bam_name << endl;
+		exit(1);
+	}
+	string bai_name = bam_name + ".bai";
+	bool bai_status = currentSam.ReadBamIndex( bai_name.c_str() );
+	if ( !bai_status ) {
+		cerr << "ERROR: " << bai_name << " do not exists. Please use samtools index <bam> to generate it." << endl;
+		exit(1);
+	}
+	
 // do print. Also merge consecutive windows. Print out the one with highest GL
 	ofstream outVcf;
 	outVcf.open( vcf_name.c_str() );
@@ -302,6 +318,7 @@ void OriginalStats::PrintGLasVcf( string & vcf_name )
 		}
 	}
 	outVcf.close();
+	currentSam.Close();
 }
 
 /*** print sub function ***/
@@ -407,10 +424,22 @@ void OriginalStats::printSingleMergeCell( ofstream & outVcf, GlcPtr & Ptr, strin
 		if ( depth < MinDepth || depth > MaxDepth ) // filter by depth
 			return;
 	}
-	outVcf << chr_name << "\t" << infoPtr->central << "\t.\t.\t<INS:ME:" << mei_name << ">\t";
+	int event_end;
+	int ci_low;
+	int ci_high;
+	int breakp;
+	if ( BREAK_POINT ) {
+		breakp = getBreakPointAndCI( chr_name, infoPtr->central, event_end, ci_low, ci_high );
+	}
+	else { // use step size as rough estimate if do not refine breakp
+		breakp = infoPtr->central;
+		ci_low = -infoPtr->ci;
+		ci_high = infoPtr->ci;
+		event_end = infoPtr->var_end;
+	}
+	outVcf << chr_name << "\t" << breakp << "\t.\t.\t<INS:ME:" << mei_name << ">\t";
 	outVcf << infoPtr->gq_peak << "\tPASS\tSVTYPE=INS;END=";
-	outVcf << infoPtr->var_end << ";CIPOS=";
-	outVcf << -infoPtr->ci << "," << infoPtr->ci;
+	outVcf << event_end << ";CIPOS=" << ci_low << "," << ci_high;
 //	outVcf << ";CIEND=" << -infoPtr->ci << "," << infoPtr->ci;
 	int clip_count = getSumSupportClips( Merge->counts );
 	int disc_count = getSumSupportDiscs( Merge->counts);
@@ -543,6 +572,102 @@ string OriginalStats::convertChrIndexToName( int chr_index )
 }
 
 
+// get break point of variant
+int OriginalStats::getBreakPointAndCI( string & chr_name, int & center, int & event_end, int & ci_low, int & ci_high )
+{
+	bool section_status = currentSam.SetReadSection( chr_name.c_str(), center - WIN / 2 - 200, center + WIN / 2 + 200 );
+	if ( !section_status ) {
+		cerr << "ERROR: Unable to set bam section: " << chr_name << ": " << center - WIN / 2 - 200 << " - " << center + WIN / 2 + 200 << endl;
+		exit(1);
+	}
+	int start = center - WIN / 2;
+	
+// build vector of spanning counts
+	vector<int> locs;
+	vector<int> clips;
+	clips.resize( WIN, 0 );
+	locs.resize( WIN, 0 );	
+	SamRecord sam_rec;
+	while( currentSam.ReadRecord( currentSamHeader, sam_rec ) ) {
+		int flag = sam_rec.getFlag();
+		if ( flag & 0x4 || flag & 0x800 || flag & 0x400 || flag & 0x200 || flag & 0x100 )
+			continue;
+		int st = sam_rec.get1BasedPosition() - start;
+		int ed = sam_rec.get1BasedAlignmentEnd() - start;
+		ed -= 10;
+		if ( ed < 0 )  // in locs?
+			continue;
+		st += 10;
+		if ( st >= WIN )  // in locs?
+			continue;
+		if ( ed - st < 0 ) // enough length?
+			continue;
+		int true_st = st >= 0 ? st : 0;
+		int true_ed = ed < WIN ? ed : WIN - 1;
+		for( int i = true_st; i <= true_ed; i++ ) {
+			locs[i]++;
+		}
+// add clip info
+		int cliplen = getMaxClipLen( sam_rec );
+		if ( cliplen == 0 )
+			continue;
+		int index;
+		if ( abs(cliplen) < 10 ) //skip short clip
+			continue;
+		if ( cliplen > 0 ) { // begin clip
+			index = st - 10;
+		}
+		else { // end clip
+			index = ed + 10;
+		}
+		if ( index < 0 || index >= WIN ) // skip those out of WIN region
+			continue;
+	// add to map
+		clips[ index ]++; 
+	}
+
+// get breakp
+// utilize clip first
+	bool no_clip = std::all_of( clips.begin(), clips.end(), [](int i) { return i == 0;} );
+	if ( !no_clip ) {
+		vector<int> cluster = clips;
+		for( int i = 24; i < WIN - 25; i++ ) {
+			for( int j = 1; j <= 24; j++ )
+				cluster[i] += clips[ i - j ];
+			for( int j = 1; j <= 24; j++ )
+				cluster[i] += clips[ i + j ];
+		}
+		int max_cluster = *std::max_element( cluster.begin(), cluster.end() );
+		int avr_index = GetAvrLocationOfCertainValue( cluster, max_cluster, ci_low, ci_high );
+		int breakp = avr_index + start;
+		ci_low = avr_index - ci_low > 25 ? ci_low - avr_index : -25;
+		ci_high = ci_high - avr_index > 25 ? ci_high - avr_index : 25;
+	// set event end at the next point where #span increase
+		event_end = start + WIN;
+		for( int inc = avr_index + 1; inc < WIN; inc++ ) {
+			if( locs[ inc ] > locs[inc - 1] ) {
+				event_end = inc + start;
+				break;
+			}
+		}
+		return breakp;
+	}
+	
+
+// if no clip, use span info: average each 3 nearby locs --> get minimum --> if equal values exist, take average
+	vector<int> avrs;
+	avrs.resize( WIN - 2 );
+	for( int i = 1; i <= WIN - 2; i++ ) {
+		avrs[i-1] = round( float(locs[i-1] + locs[i] + locs[i+1]) / 3 );
+	}
+	int min_span = *std::min_element( avrs.begin(), avrs.end() );
+	int avr_index = GetAvrLocationOfCertainValue( avrs, min_span,  ci_low, ci_high );
+	event_end = ci_high + start + 1;
+	ci_low = avr_index - ci_low > 25 ? ci_low - avr_index : -25;
+	ci_high = ci_high - avr_index > 25 ? ci_high - avr_index : 25;
+ 	int breakp = avr_index + start + 1;
+	return breakp;
+}
 
 
 

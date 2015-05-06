@@ -2,6 +2,7 @@
 #define ORIGINALSTATS_H
 
 #include "AnchorRank.h" // merge window when print
+#include "SamFile.h"
 // processing stats that are directly read from stat file
 
 #include <string>
@@ -46,7 +47,7 @@ class OriginalStats
 	bool Add( string current_chr, string & proper_name, string & disc_name );
 	void ReOrganize();
 	void ClearUnderLevelMergeCells();
-	void PrintGLasVcf( string & vcf_name ); // print to vcf
+	void PrintGLasVcf( string & vcf_name, string & bam_name, string & ref_fasta ); // print to vcf
 // final data structure
 	vector< MergeCell > MergeData;
 	map< string, vector< GenomeLocationCell > > GenomeLocationMap;
@@ -63,18 +64,24 @@ class OriginalStats
   	static bool sortGenomeLocations( GenomeLocationCell x, GenomeLocationCell y );
   	int convertChrNameToIndex( string chr_name );
   	string convertChrIndexToName( int chr_index );
-  	
+  	int getBreakPointAndCI( string & chr_name, int & center, int & event_end, int & ci_low, int & ci_high ); // get break point from bam
   
  // constants 
-  	static const int ClipStart; // vector start of clip
-  	static const int DiscStart;
-  	static const int RawCellSize;
-  	static const float MinDepth; // for depth filter when print vcf
-  	static const float MaxDepth;
+  	const int ClipStart; // vector start of clip
+  	const int DiscStart;
+  	const int RawCellSize;
+  	const float MinDepth; // for depth filter when print vcf
+  	const float MaxDepth;
   	const int mei_index; // current mei type
   	string SampleName;
   	int current_add_start; // current start for adding rawStats
 	vector<RawCell> rawStats; // start from rawStats end
+
+// bam file header
+	SamFile currentSam;
+	SamFileHeader currentSamHeader;
+
+	
 // for name conversion
 	map< string, int > chrNameHash;
 	vector< string > chrIndexVec;

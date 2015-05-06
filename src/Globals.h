@@ -8,6 +8,8 @@ extern bool SINGLE_SIDE; // if include single-end results in printing vcf
 extern bool PSEUDO_CHR; // if 1, include pseudo chromosomes
 extern bool PRINT_NON_VARIANT; // if 1, print GT=0 windows. For debug use
 extern bool DEPTH_FILTER; // filter variants by depth
+extern bool BREAK_POINT; // refine break point?
+extern bool REF_ALLELE; // print ref base out?
 
 extern int WIN;  // win length
 extern int STEP; // step length

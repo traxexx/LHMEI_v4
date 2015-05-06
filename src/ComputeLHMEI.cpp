@@ -19,35 +19,13 @@ using std::endl;
 
 void ComputeLHMEI (Options * ptrMainOptions)
 {
+	SetGlobalOptions( ptrMainOptions );
+
 	int win_len = stoi(ptrMainOptions->ArgMap["Win"]);
 	int step_len = stoi(ptrMainOptions->ArgMap["Step"]);
 	WIN = stoi(ptrMainOptions->ArgMap["Win"]);
 	STEP = stoi(ptrMainOptions->ArgMap["Step"]);
 	REF_CHR = ptrMainOptions->ArgMap["CtrlChr"];
-
-
-/*** set globals ****/
-// set debug mode
-	if (ptrMainOptions->OptMap["debug"])
-		DEBUG_MODE = 1;
-
-// set single end
-	if ( ptrMainOptions->OptMap["includeSingleAnchor"] )
-		SINGLE_SIDE = 1;
-		
-// pseodu-chr
-	if ( ptrMainOptions->OptMap["pseudoChr"] )
-		PSEUDO_CHR = 1;
-		
-// non-variant
-	if ( ptrMainOptions->OptMap["printNonVariant"] )
-		PRINT_NON_VARIANT = 1;
-
-// dp filter
-	if ( ptrMainOptions->OptMap["disableDPfilter"] )
-		DEPTH_FILTER = 0;
-
-/*** globals complete ***/
 
 	string work_dir = ptrMainOptions->ArgMap["WorkDir"];
 	if (work_dir[ work_dir.size() - 1 ] != '/')
@@ -195,7 +173,7 @@ void ComputeLHMEI (Options * ptrMainOptions)
 			string outRecord = work_dir + "refLH." + std::to_string(mei_type) + ".report";
 		// ref LH
 			if ( !( ptrMainOptions->OptMap["noCtrlVcf"] ) )
-				rStats->PrintCtrlGLasRecord( outRecord, 1 );
+				rStats->PrintCtrlGLasRecord( outRecord, ctrl_bam, ptrMainOptions->ArgMap["SliceFA"] );
 			if ( ptrMainOptions->OptMap["printRefStats"] ) { // debug: print refStats
 				string refPrefix = ptrMainOptions->ArgMap["refPrefix"] + "." + std::to_string(mei_type);
 				rStats->PrintRefStats( refPrefix );
@@ -283,7 +261,7 @@ void ComputeLHMEI (Options * ptrMainOptions)
 			if ( focus_chr_str.compare("-1") != 0 )
 				vcf_name += "-" + focus_chr_str;	
 			 vcf_name += "." + std::to_string(mei_type) + ".vcf";
-			dataOsPtr->PrintGLasVcf( vcf_name );
+			dataOsPtr->PrintGLasVcf( vcf_name, ptrMainOptions->ArgMap["Bam"], ptrMainOptions->ArgMap["GenomeFasta"] );
 		}
 	}
 /* delete intermediates:
@@ -292,7 +270,37 @@ void ComputeLHMEI (Options * ptrMainOptions)
 */
 }
 
+ // set bool global parameters in Globals.h
+void SetGlobalOptions( Options * ptrMainOptions )
+{
+// set debug mode
+	if (ptrMainOptions->OptMap["debug"])
+		DEBUG_MODE = 1;
 
+// set single end
+	if ( ptrMainOptions->OptMap["includeSingleAnchor"] )
+		SINGLE_SIDE = 1;
+		
+// pseodu-chr
+	if ( ptrMainOptions->OptMap["pseudoChr"] )
+		PSEUDO_CHR = 1;
+		
+// non-variant
+	if ( ptrMainOptions->OptMap["printNonVariant"] )
+		PRINT_NON_VARIANT = 1;
+
+// dp filter
+	if ( ptrMainOptions->OptMap["disableDPfilter"] )
+		DEPTH_FILTER = 0;
+		
+// no ref allele base?		
+	if ( ptrMainOptions->OptMap["noRefAllele"] )
+		REF_ALLELE = 0;
+
+// no break point refine?
+	if ( ptrMainOptions->OptMap["noBreakPoint"] )
+		BREAK_POINT = 0;
+}
 
 
 

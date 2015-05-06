@@ -60,7 +60,7 @@ class RefStats
   	void AdjustUsedLoci( OriginalStats* dataOsPtr ); // remove self-contribution from LH
   	void MarkRefLHasDone(); // mark ref as done
   	void ReAdjustSelfsWithLiftOver();
-  	void PrintCtrlGLasRecord( string & outRecord, bool detailed ); // generate ctrl lh, report %power, #novel
+  	void PrintCtrlGLasRecord( string & outRecord, string & ctrl_bam, string & ctrl_fasta ); // generate ctrl lh, report %power, #novel
   	
 	void PrintRefStats( string & out_prefix ); // debug function: print to out_prefix.0 neg .1 het, .2 hom
 
